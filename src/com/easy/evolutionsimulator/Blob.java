@@ -1,15 +1,17 @@
 package com.easy.evolutionsimulator;
 
-import java.util.LinkedList;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static com.easy.evolutionsimulator.Environment.*;
 import static com.easy.evolutionsimulator.Log.*;
+import static com.easy.evolutionsimulator.Main.printEnvEnabled;
 
 public class Blob extends Animal {
     public int dirFood, adjustedSpeed;
     public Integer foodX, foodY;
-    public static LinkedList<Integer> removeFoodList = new LinkedList<>();
+    public static ConcurrentLinkedQueue<Integer> removeFoodQueue = new ConcurrentLinkedQueue<>();
+    public static int foodQueueSize;
 
     public Blob(String species) {
         switch (species) {
@@ -190,8 +192,10 @@ public class Blob extends Animal {
                 foodEaten++;
                 onFoodBlock = true;
 
-                if ((dimX + 1) <= 80 && (dimY + 1) <= 80) {
-                    removeFoodList.add(foodEntity.getKey());
+                if (printEnvEnabled) {
+                    //removeFoodList.add(foodEntity.getKey());
+                    removeFoodQueue.add(foodEntity.getKey());
+                    foodQueueSize++;
                     foodEntity.getValue().available = false;
                 } else foodHash.remove(foodEntity.getKey());
 

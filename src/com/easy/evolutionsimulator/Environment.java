@@ -100,7 +100,7 @@ public class Environment {
     public void fillFood(int amount, String foodType) {
         int posX, posY;
 
-        while (foodHash.size() < amount) {
+        while (foodAmount < amount) {
             posX = Calc.rng.nextInt(dimX + 1);
             posY = Calc.rng.nextInt(dimY + 1);
             if (foodType == null) foodHash.put(fid, new Food(posX, posY));

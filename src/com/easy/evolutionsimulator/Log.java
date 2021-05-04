@@ -6,8 +6,8 @@ import static com.easy.evolutionsimulator.Environment.*;
 import static com.easy.evolutionsimulator.Main.timeElapsed;
 
 public class Log {
-    static int foodEaten, blobDeaths, blobBirths, blobAmount, foodAmount, day;
-    static DecimalFormat df = new DecimalFormat("#.###");
+    public static int foodEaten, blobDeaths, blobBirths, blobAmount, foodAmount, day;
+    private static final DecimalFormat df = new DecimalFormat("#.###");
 
     public static void logEnv() {
         System.out.printf("\n\n\nEnvDimensions: %s x %s\tEnvSize: %s\tTime elapsed: %ss\n", dimX + 1, dimY + 1, envSize, df.format(timeElapsed));
