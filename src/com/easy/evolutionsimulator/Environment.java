@@ -1,32 +1,37 @@
 package com.easy.evolutionsimulator;
 
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static com.easy.evolutionsimulator.Log.*;
 
 public class Environment {
     static LinkedList<Blob> blobEntities;
     static LinkedList<Food> foodEntities;
+    static ConcurrentHashMap<Integer, Blob> blobHash;
+    static ConcurrentHashMap<Integer, Food> foodHash;
     static int dimX, dimY;
-    static int envSize, id;
-    static int foodEaten, blobDeaths, blobBirths;
-
-    public static void log() {
-        System.out.printf("\n\n\nEnvDimensions: %s x %s\tEnvSize: %s%n", dimX + 1, dimY + 1, envSize);
-        System.out.printf("Food count: %s\tFood eaten: %s%n", foodEntities.size(), foodEaten);
-        System.out.printf("Blob count: %s\tBlob deaths: %s\tBlob births: %s\n%n", blobEntities.size(), blobDeaths, blobBirths);
-
-        /*Blob blob;
-        for (int i = 0; i < blobEntities.size(); i++) {
-            blob = blobEntities.get(i);
-            System.out.println(String.format("Blob %s\tx: %s\ty: %s\tEnergy: %s\tFoodDir: %s\tx: %s\ty: %s",
-                    i, blob.posX, blob.posY, blob.energy, blob.dirFood, blob.foodX, blob.foodY));
-        }*/
-    }
+    static int envSize;
+    static Integer id, fid;
 
     static class Food {
         int satiety, posX, posY;
+        Integer fid;
+        boolean available = true;
 
         public Food() {
             satietyDefault();
+            setFID(Environment.fid);
+            foodAmount++;
+        }
+
+        public Food(int posX, int posY) {
+            satietyDefault();
+            this.posX = posX;
+            this.posY = posY;
+            setFID(Environment.fid);
+            foodAmount++;
         }
 
         public Food(String satietyLevel) {
@@ -35,6 +40,24 @@ public class Environment {
                 case "low" -> satietyLow();
                 case "high" -> satietyHigh();
             }
+            setFID(Environment.fid);
+            foodAmount++;
+        }
+
+        public Food(String satietyLevel, int posX, int posY) {
+            switch (satietyLevel) {
+                case "default" -> satietyDefault();
+                case "low" -> satietyLow();
+                case "high" -> satietyHigh();
+            }
+            this.posX = posX;
+            this.posY = posY;
+            setFID(Environment.fid);
+            foodAmount++;
+        }
+
+        public void setFID(Integer fid) {
+            this.fid = fid;
         }
 
         public void setPosition(int posX, int posY) {
@@ -66,39 +89,93 @@ public class Environment {
         dimX = pDimX - 1;
         dimY = pDimY - 1;
         envSize = pDimX * pDimY;
-        blobEntities = new LinkedList<>();
-        foodEntities = new LinkedList<>();
+        blobHash = new ConcurrentHashMap<>();
+        foodHash = new ConcurrentHashMap<>();
+        id = 0;
+        fid = 0;
     }
 
     /**
-     * Spawns food. Fills the list of food entities until its size matches with the given amount.
+     * Fills the list of food entities until its size matches with the given amount.
      * @param amount Amount of food that should be in the environment in total
      * @param foodType Type of food
      */
-    public void spawnFood(int amount, String foodType) {
-        while (foodEntities.size() < amount) {
-            int posX = Calc.rng.nextInt(dimX + 1);
-            int posY = Calc.rng.nextInt(dimY + 1);
-            if (foodType == null) foodEntities.add(new Food());
-            else foodEntities.add(new Food(foodType));
-            foodEntities.getLast().setPosition(posX, posY);
+    public void fillFood(int amount, String foodType) {
+        int posX, posY;
+
+        while (foodHash.size() < amount) {
+            posX = Calc.rng.nextInt(dimX + 1);
+            posY = Calc.rng.nextInt(dimY + 1);
+            if (foodType == null) foodHash.put(fid, new Food(posX, posY));
+            else foodHash.put(fid, new Food(foodType, posX, posY));
+            fid++;
         }
     }
 
     /**
-     * Clears the list of all Blob entities and fills it with new ones.
-     * @param amount Amount of Blobs to be created
+     * Spawns a certain amount of food of a specific food type.
+     * @param amount Amount of food to be created
+     * @param foodType The food type you want to spawn
+     * @param clearEntities True to clear the list of all Food entities
      */
-    public void spawnBlobs(int amount) {
-        blobEntities.clear();
+    public void spawnFood(int amount, String foodType, boolean clearEntities) {
+        if (clearEntities) {
+            foodHash.clear();
+            fid = 0;
+        }
         int posX, posY;
-        id = 0;
 
         for (int i = 0; i < amount; i++) {
             posX = Calc.rng.nextInt(dimX + 1);
             posY = Calc.rng.nextInt(dimY + 1);
-            blobEntities.add(new Blob("default"));
-            blobEntities.getLast().setPosition(posX, posY);
+            if (foodType == null) foodHash.put(fid, new Food(posX, posY));
+            else foodHash.put(fid, new Food(foodType, posX, posY));
+            fid++;
+        }
+    }
+
+    public void spawnFood(int amount, String foodType, boolean clearEntities, int posX, int posY) {
+        if (clearEntities) {
+            foodHash.clear();
+            fid = 0;
+        }
+
+        for (int i = 0; i < amount; i++) {
+            if (foodType == null) foodHash.put(fid, new Food(posX, posY));
+            else foodHash.put(fid, new Food(foodType, posX, posY));
+            fid++;
+        }
+    }
+
+    /**
+     * Spawns a certain amount of Blobs of a specific species.
+     * @param amount Amount of Blobs to be created
+     * @param species The species you want to spawn
+     * @param clearEntities True to clear the list of all Blob entities
+     */
+    public void spawnBlobs(int amount, String species, boolean clearEntities) {
+        if (clearEntities) {
+            blobHash.clear();
+            id = 0;
+        }
+        int posX, posY;
+
+        for (int i = 0; i < amount; i++) {
+            posX = Calc.rng.nextInt(dimX + 1);
+            posY = Calc.rng.nextInt(dimY + 1);
+            blobHash.put(id, new Blob(species, posX, posY));
+            id++;
+        }
+    }
+
+    public void spawnBlobs(int amount, String species, boolean clearEntities, int posX, int posY) {
+        if (clearEntities) {
+            blobHash.clear();
+            id = 0;
+        }
+
+        for (int i = 0; i < amount; i++) {
+            blobHash.put(id, new Blob(species, posX, posY));
             id++;
         }
     }
@@ -113,26 +190,25 @@ public class Environment {
     public void moveBlob(Blob blob) {
         int exKey = blob.getExKey();
 
-            if (blob.foodX == null && exKey == 0) {
-                blob.moveBlob(Calc.rng.nextInt(9), blob.speed);
-            } else if (blob.foodX == null && exKey > 0) {
-                blob.moveBlob(Calc.getValidDirKey(exKey), blob.speed);
-            } else {
-                blob.moveBlob(blob.dirFood, blob.adjustedSpeed);
-            }
+        if (blob.foodX == null && exKey == 0) {
+            blob.moveBlob(Calc.rng.nextInt(9), blob.speed);
+        } else if (blob.foodX == null && exKey > 0) {
+            blob.moveBlob(Calc.getValidDirKey(exKey), blob.speed);
+        } else {
+            blob.moveBlob(blob.dirFood, blob.adjustedSpeed);
+        }
     }
 
     /**
      * Repositions all Blobs to random positions in the environment.
      */
     public void repositionBlobs() {
-        int posX, posY;
+        Blob blob;
 
-        for (Blob blobEntity : blobEntities) {
-            posX = Calc.rng.nextInt(dimX + 1);
-            posY = Calc.rng.nextInt(dimY + 1);
-            blobEntity.setPosX(posX);
-            blobEntity.setPosY(posY);
+        for (Map.Entry<Integer, Blob> blobEntity : blobHash.entrySet()) {
+            blob = blobEntity.getValue();
+            blob.setPosX(Calc.rng.nextInt(dimX + 1));
+            blob.setPosY(Calc.rng.nextInt(dimY + 1));
         }
     }
 
@@ -143,25 +219,26 @@ public class Environment {
      * @param foodType Type of food
      */
     public void startDay(int moveCount, int foodCount, String foodType) {
+        day++;
         Blob blob;
+        fillFood(foodCount, foodType);
 
-        spawnFood(foodCount, foodType);
         for (int i = 0; i < moveCount; i++) {
-            for (Blob blobEntity : blobEntities) {
-                blob = blobEntity;
+            for (Map.Entry<Integer, Blob> blobEntity : blobHash.entrySet()) {
+                blob = blobEntity.getValue();
+                logBlob(blob);
 
-                if (blob.senseFood()) {
+                if (blob.foodX != null || blob.senseFood()) {
                     blob.calcDirectionKey();
                     moveBlob(blob);
-                    blob.eatFood();
+                    if (blob.calcDirectionKey() == 0) {
+                        blob.eatFood();
+                        blob.foodX = null;blob.foodY = null;
+                    }
                 } else {
                     moveBlob(blob);
                 }
-
-                System.out.printf("BlobID(%s)\tx: %s\ty: %s\tEnergy: %s\tFoodDir: %s\tx: %s\ty: %s\tAdjSpeed: %s\tExKey: %s\n",
-                        blob.id, blob.posX, blob.posY, blob.energy, blob.dirFood, blob.foodX, blob.foodY, blob.adjustedSpeed, blob.getExKey());
-
-                blob.modEnergy(- 1);
+                blob.modEnergy(-1);
             }
         }
     }
@@ -172,40 +249,32 @@ public class Environment {
      */
     public void endDay(int maxBlobs) {
         if (maxBlobs == 0) maxBlobs = Integer.MAX_VALUE;
-        int blobAmount = blobEntities.size();
         Blob blob;
 
-        for (int i = 0; i < blobAmount; i++) {
-            blob = blobEntities.get(i);
+        for (Map.Entry<Integer, Blob> blobEntity : blobHash.entrySet()) {
+            blob = blobEntity.getValue();
             blob.modAge(1);
 
             if (blob.energy <= 0) {
-                //noinspection SuspiciousListRemoveInLoop
-                blobEntities.remove(i);
+                blobHash.remove(blobEntity.getKey());
                 blobAmount--;
                 blobDeaths++;
                 continue;
             } else if (blob.energy > 100) blob.energy = 100;
 
-            while(blobAmount > maxBlobs) {
-                blobEntities.removeLast();
-                blobAmount--;
-            }
-
-            if(blobAmount < maxBlobs && blob.willReproduce()) {
+            if(blobHash.size() < maxBlobs && blob.willReproduce()) {
                 id++;
-                blobEntities.add(new Blob(
+                blobHash.put(id, new Blob(
                         id,
                         60,
                         blob.speed,
                         blob.sense,
                         blob.strength,
                         blob.size,
-                        blob.agro));
-                blobEntities.getLast().setPosX(Calc.rng.nextInt(dimX + 1));
-                blobEntities.getLast().setPosY(Calc.rng.nextInt(dimY + 1));
+                        blob.agro,
+                        Calc.rng.nextInt(dimX + 1),
+                        Calc.rng.nextInt(dimX + 1)));
                 blobBirths++;
-                blobAmount++;
             }
         }
     }

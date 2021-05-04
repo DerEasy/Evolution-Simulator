@@ -1,15 +1,30 @@
 package com.easy.evolutionsimulator;
 
+import java.util.LinkedList;
+import java.util.Map;
+
 import static com.easy.evolutionsimulator.Environment.*;
+import static com.easy.evolutionsimulator.Log.*;
 
 public class Blob extends Animal {
     public int posX, posY, dirFood, adjustedSpeed;
     public Integer foodX, foodY;
+    public static LinkedList<Integer> removeFoodList = new LinkedList<>();
 
     public Blob(String species) {
         switch (species) {
             case "default" -> defaultBlob();
         }
+        blobAmount++;
+    }
+
+    public Blob(String species, int x, int y) {
+        switch (species) {
+            case "default" -> defaultBlob();
+        }
+        posX = x;
+        posY = y;
+        blobAmount++;
     }
 
     public Blob(Integer id, Integer energy, Integer speed, Integer sense, Integer strength, Integer size, Integer agro) {
@@ -20,6 +35,20 @@ public class Blob extends Animal {
         setSize(size);
         setEnergy(energy);
         setAgro(agro);
+        blobAmount++;
+    }
+
+    public Blob(Integer id, Integer energy, Integer speed, Integer sense, Integer strength, Integer size, Integer agro, int x, int y) {
+        setId(id);
+        setSpeed(speed);
+        setStrength(strength);
+        setSense(sense);
+        setSize(size);
+        setEnergy(energy);
+        setAgro(agro);
+        posX = x;
+        posY = y;
+        blobAmount++;
     }
 
     /**
@@ -29,7 +58,7 @@ public class Blob extends Animal {
         setId(Environment.id);
         setEnergy(60); //Energy in percent
         setSense(3); //Radius a Blob can scavenge/scan - in blocks (applies for diagonals as well). Amount of blocks: (2x + 1)²
-        setSpeed(2); //Amount of blocks a Blob can pass in one go
+        setSpeed(1); //Amount of blocks a Blob can pass in one go
     }
 
     public void setPosition(int posX, int posY) {
@@ -102,23 +131,52 @@ public class Blob extends Animal {
 
     /**
      * Scans the area for a food source and marks its position if it has been found.
-     * "Area" is defined by the sense property of the Blob.
+     * "Area" is defined by the sense property of the Blob. The Blob will try to
+     * choose the nearest food source possible.
      * @return True if nearby food has been located.
      */
     public boolean senseFood() {
         int foodX, foodY;
+        int fillIndex = -1;
+        Food[] availableFood = new Food[10];
 
-        for (Food foodEntity : foodEntities) {
-            foodX = foodEntity.posX;
-            foodY = foodEntity.posY;
+        for (Map.Entry<Integer, Food> foodEntity : foodHash.entrySet()) {
+            foodX = foodEntity.getValue().posX;
+            foodY = foodEntity.getValue().posY;
 
             if (foodX - sense <= posX && foodX + sense >= posX &&
                 foodY - sense <= posY && foodY + sense >= posY) {
-                this.foodX = foodX;
-                this.foodY = foodY;
-                return true;
-            }
+                fillIndex++;
+                availableFood[fillIndex] = foodEntity.getValue();
+            } if (fillIndex == 9) break;
         }
+
+        if (fillIndex > 0) {
+            int tempX = Math.abs(availableFood[0].posX - posX);
+            int tempY = Math.abs(availableFood[0].posY - posY);
+            int compX, compY;
+            int index = 0;
+
+            for (int i = 0; i < fillIndex - 1; i++) {
+                compX = Math.abs(availableFood[(i + 1)].posX - posX);
+                compY = Math.abs(availableFood[(i + 1)].posY - posY);
+                if ((compX < tempX && compY <= tempY) ||
+                    (compX <= tempX && compY < tempY)) {
+                    tempX = compX;
+                    tempY = compY;
+                    index = i + 1;
+                }
+            }
+
+            this.foodX = availableFood[index].posX;
+            this.foodY = availableFood[index].posY;
+            return true;
+        } else if (fillIndex == 0) {
+            this.foodX = availableFood[0].posX;
+            this.foodY = availableFood[0].posY;
+            return true;
+        }
+
         this.foodX = null;
         this.foodY = null;
         return false;
@@ -130,18 +188,25 @@ public class Blob extends Animal {
      * @return True if on a block with food on it
      */
     public boolean eatFood() {
-        int foodAmount = foodEntities.size();
         boolean onFoodBlock = false;
+        if (foodX == null || foodY == null) return false;
 
-        for (int i = 0; i < foodAmount; i++) {
-            if (foodEntities.get(i).posX == foodX && foodEntities.get(i).posY == foodY &&
-                posX == foodX && posY == foodY) {
-                energy += foodEntities.get(i).satiety;
-                //noinspection SuspiciousListRemoveInLoop
-                foodEntities.remove(i);
+        for (Map.Entry<Integer, Food> foodEntity : foodHash.entrySet()) {
+            if (foodEntity.getValue().available &&
+                foodEntity.getValue().posX == foodX &&
+                foodEntity.getValue().posY == foodY &&
+                posX == foodX &&
+                posY == foodY) {
+
+                energy += foodEntity.getValue().satiety;
                 foodAmount--;
                 foodEaten++;
                 onFoodBlock = true;
+
+                if ((dimX + 1) <= 80 && (dimY + 1) <= 80) {
+                    removeFoodList.add(foodEntity.getKey());
+                    foodEntity.getValue().available = false;
+                } else foodHash.remove(foodEntity.getKey());
 
                 if (energy >= 100) {
                     energy = 100;
@@ -155,13 +220,16 @@ public class Blob extends Animal {
 
     /**
      * Calculates the direction key of the next food source and sets the adjusted speed accordingly.
+     * @return The direction key
      */
-    public void calcDirectionKey() {
+    public int calcDirectionKey() {
         /*
         1   2   3
         8   0   4
         7   6   5
         */
+
+        if (foodX == null || foodY == null) return 0;
 
         int tempX, tempY;
         tempX = foodX - posX;
@@ -179,6 +247,17 @@ public class Blob extends Animal {
 
         tempX = Math.abs(tempX);
         tempY = Math.abs(tempY);
+        calcAdjustedSpeed(tempX, tempY);
+        return dirFood;
+    }
+
+    /**
+     * Calculates the adjusted speed value by checking where food is located.
+     * @param tempX The absolute x value determined by calcDirectionKey()
+     * @param tempY The absolute y value determined by calcDirectionKey()
+     * @return The adjusted speed
+     */
+    public int calcAdjustedSpeed(int tempX, int tempY) {
         if (tempX >= tempY) {
             if (tempX <= speed && tempX > 0) adjustedSpeed = tempX;
             else adjustedSpeed = speed;
@@ -186,16 +265,29 @@ public class Blob extends Animal {
             if (tempY <= speed && tempY > 0) adjustedSpeed = tempY;
             else adjustedSpeed = speed;
         }
+        return adjustedSpeed;
     }
 
     /**
      * Corrects the Blob's position if it wandered outside of environment boundaries.
+     * @return True if Blob was outside of boundaries
      */
-    public void correctPos() {
-        if (posX > dimX) setPosX(dimX);
-        if (posY > dimY) setPosY(dimY);
-        if (posX < 0) setPosX(0);
-        if (posY < 0) setPosY(0);
+    public boolean correctPos() {
+        boolean isOutside = false;
+        if (posX > dimX) {
+            setPosX(dimX);
+            isOutside = true;
+        } if (posY > dimY) {
+            setPosY(dimY);
+            isOutside = true;
+        } if (posX < 0) {
+            setPosX(0);
+            isOutside = true;
+        } if (posY < 0) {
+            setPosY(0);
+            isOutside = true;
+        }
+        return isOutside;
     }
 
     /**

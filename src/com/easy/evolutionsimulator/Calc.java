@@ -11,10 +11,10 @@ public class Calc {
     7   6   5
     */
 
-    /*
-    Defines the accepted direction keys incorporating the exceptions mandated by the exclusion key.
-    Read e.g. exTopLeft as "Except movements to the top left".
-     */
+
+    //Defines the accepted direction keys incorporating the exceptions mandated by the exclusion key.
+    //Read e.g. exTopLeft as "Except movements to the top left".
+
     public static final int[] exTopLeft     = {0, 4, 5, 6};         //exKey: 1
     public static final int[] exTop         = {0, 4, 5, 6, 7, 8};   //exKey: 2
     public static final int[] exTopRight    = {0, 6, 7, 8};         //exKey: 3
