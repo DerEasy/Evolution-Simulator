@@ -1,14 +1,11 @@
 package com.easy.evolutionsimulator;
 
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.easy.evolutionsimulator.Log.*;
 
 public class Environment {
-    static LinkedList<Blob> blobEntities;
-    static LinkedList<Food> foodEntities;
     static ConcurrentHashMap<Integer, Blob> blobHash;
     static ConcurrentHashMap<Integer, Food> foodHash;
     static int dimX, dimY;
