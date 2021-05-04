@@ -20,17 +20,14 @@ public class Main {
     }
 
     public Main() {
-        envLogic = new Environment(10, 10);
-        envLogic.spawnBlobs(5, "default", false);
-        //envLogic.spawnBlobs(1, "default", false, 4, 3);
-        //envLogic.spawnFood(1, "default", true, 0, 0);
-        //envLogic.spawnFood(1, "default", false ,3, 0);
-        //envLogic.spawnFood(1, "default", false ,0, 2);
+        envLogic = new Environment(8, 8);
+        envLogic.spawnBlobs(3, "default", false);
+        envLogic.spawnBlobs(6, "small", false);
 
         hasBlob = new boolean[dimX + 1][dimY + 1];
         hasFood = new boolean[dimX + 1][dimY + 1];
 
-        startSimulation(1000, 0, true, 0, 1, 5, "default");
+        startSimulation(0, 0, true, 0, 1, 4, "default");
     }
 
     public void startSimulation(int days, int foodAmountToEat, boolean printEnv, int maxBlobs, int moveCount, int foodCount, String foodType) {

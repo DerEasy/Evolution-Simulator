@@ -16,6 +16,7 @@ public class Blob extends Animal {
     public Blob(String species) {
         switch (species) {
             case "default" -> defaultBlob();
+            case "small" -> smallBlob();
         }
         blobAmount++;
     }
@@ -23,6 +24,7 @@ public class Blob extends Animal {
     public Blob(String species, int x, int y) {
         switch (species) {
             case "default" -> defaultBlob();
+            case "small" -> smallBlob();
         }
         posX = x;
         posY = y;
@@ -54,13 +56,22 @@ public class Blob extends Animal {
     }
 
     /**
-     * Sets default minimal properties of a Blob.
+     * Sets default properties of a Blob.
      */
     public void defaultBlob() {
         setId(Environment.id);
-        setEnergy(60); //Energy in percent
+        setEnergy(60); //Energy from 0 to 100
         setSense(3); //Radius a Blob can scavenge/scan - in blocks (applies for diagonals as well). Amount of blocks: (2x + 1)²
         setSpeed(1); //Amount of blocks a Blob can pass in one go
+        setSize(15); //Size from 1 to 100
+    }
+
+    public void smallBlob() {
+        setId(Environment.id);
+        setEnergy(60); //Energy from 0 to 100
+        setSense(3); //Radius a Blob can scavenge/scan - in blocks (applies for diagonals as well). Amount of blocks: (2x + 1)²
+        setSpeed(2); //Amount of blocks a Blob can pass in one go
+        setSize(10); //Size from 1 to 100
     }
 
 
@@ -182,12 +193,12 @@ public class Blob extends Animal {
 
         for (Map.Entry<Integer, Food> foodEntity : foodHash.entrySet()) {
             if (foodEntity.getValue().available &&
-                foodEntity.getValue().posX == foodX &&
-                foodEntity.getValue().posY == foodY &&
-                posX == foodX &&
-                posY == foodY) {
-
-                energy += foodEntity.getValue().satiety;
+                    foodEntity.getValue().posX == foodX &&
+                    foodEntity.getValue().posY == foodY &&
+                    posX == foodX &&
+                    posY == foodY) {
+                
+                modEnergy(foodEntity.getValue().satiety);
                 foodAmount--;
                 foodEaten++;
                 onFoodBlock = true;
@@ -200,13 +211,43 @@ public class Blob extends Animal {
                 } else foodHash.remove(foodEntity.getKey());
 
                 if (energy >= 100) {
-                    energy = 100;
+                    setEnergy(100);
                     return true;
                 }
             }
         }
         adjustedSpeed = speed;
         return onFoodBlock;
+    }
+
+    /**
+     * If the Blob meets another Blob on the same block, it will eat it if
+     * it's 20% bigger than it. A Blob can eat 2 other Blobs at most in one go.
+     * @return True if a Blob has been eaten
+     */
+    public boolean eatBlob() {
+        Blob blob;
+        int blobsEaten = 0;
+
+        for (Map.Entry<Integer, Blob> blobEntity : blobHash.entrySet()) {
+            blob = blobEntity.getValue();
+
+            if (energy >= 100 && blobsEaten > 0) return true;
+            if (energy >= 100 && blobsEaten == 0) return false;
+
+            if (blob.posX == posX && blob.posY == posY &&
+                    size >= blob.size + (blob.size * 0.2) && blobsEaten <= 2) {
+                
+                modEnergy((int) (blob.size / 2.5));
+                modSize(1);
+                blobHash.remove(blobEntity.getKey());
+                blobDeaths++;
+                blobsEaten++;
+                blobAmount--;
+                Log.blobsEaten++;
+            }
+        }
+        return blobsEaten > 0;
     }
 
     /**

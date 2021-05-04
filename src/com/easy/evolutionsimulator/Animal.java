@@ -1,6 +1,6 @@
 package com.easy.evolutionsimulator;
 
-public class Animal {
+public abstract class Animal {
     public Integer speed, strength, sense, size, energy, agro, age, id;
     public int posX, posY;
 

@@ -219,11 +219,14 @@ public class Environment {
         day++;
         Blob blob;
         fillFood(foodCount, foodType);
+        //spawnBlobs(2, "small", false);
 
         for (int i = 0; i < moveCount; i++) {
             for (Map.Entry<Integer, Blob> blobEntity : blobHash.entrySet()) {
                 blob = blobEntity.getValue();
+                if (blob.size > 100) blob.setSize(100);
                 logBlob(blob);
+                blob.eatBlob();
 
                 if (blob.foodX != null || blob.senseFood()) {
                     blob.calcDirectionKey();
@@ -268,7 +271,7 @@ public class Environment {
                         blob.speed,
                         blob.sense,
                         blob.strength,
-                        blob.size,
+                        blob.size - (Calc.rng.nextInt(4) + 1),
                         blob.agro,
                         Calc.rng.nextInt(dimX + 1),
                         Calc.rng.nextInt(dimX + 1)));
