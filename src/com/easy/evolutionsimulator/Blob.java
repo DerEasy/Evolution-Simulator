@@ -7,7 +7,7 @@ import static com.easy.evolutionsimulator.Environment.*;
 import static com.easy.evolutionsimulator.Log.*;
 
 public class Blob extends Animal {
-    public int posX, posY, dirFood, adjustedSpeed;
+    public int dirFood, adjustedSpeed;
     public Integer foodX, foodY;
     public static LinkedList<Integer> removeFoodList = new LinkedList<>();
 
@@ -59,19 +59,6 @@ public class Blob extends Animal {
         setEnergy(60); //Energy in percent
         setSense(3); //Radius a Blob can scavenge/scan - in blocks (applies for diagonals as well). Amount of blocks: (2x + 1)²
         setSpeed(1); //Amount of blocks a Blob can pass in one go
-    }
-
-    public void setPosition(int posX, int posY) {
-        this.posX = posX;
-        this.posY = posY;
-    }
-
-    public void setPosX(int posX) {
-        this.posX = posX;
-    }
-
-    public void setPosY(int posY) {
-        this.posY = posY;
     }
 
 
@@ -157,7 +144,7 @@ public class Blob extends Animal {
             int compX, compY;
             int index = 0;
 
-            for (int i = 0; i < fillIndex - 1; i++) {
+            for (int i = 0; i < fillIndex; i++) {
                 compX = Math.abs(availableFood[(i + 1)].posX - posX);
                 compY = Math.abs(availableFood[(i + 1)].posY - posY);
                 if ((compX < tempX && compY <= tempY) ||
@@ -247,7 +234,8 @@ public class Blob extends Animal {
 
         tempX = Math.abs(tempX);
         tempY = Math.abs(tempY);
-        calcAdjustedSpeed(tempX, tempY);
+        if (speed == 1) adjustedSpeed = 1;
+        else calcAdjustedSpeed(tempX, tempY);
         return dirFood;
     }
 

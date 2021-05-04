@@ -230,7 +230,8 @@ public class Environment {
                     moveBlob(blob);
                     if (blob.calcDirectionKey() == 0) {
                         blob.eatFood();
-                        blob.foodX = null;blob.foodY = null;
+                        blob.foodX = null;
+                        blob.foodY = null;
                     }
                 } else {
                     moveBlob(blob);
@@ -259,7 +260,7 @@ public class Environment {
                 continue;
             } else if (blob.energy > 100) blob.energy = 100;
 
-            if(blobHash.size() < maxBlobs && blob.willReproduce()) {
+            if(blobAmount < maxBlobs && blob.willReproduce()) {
                 id++;
                 blobHash.put(id, new Blob(
                         id,

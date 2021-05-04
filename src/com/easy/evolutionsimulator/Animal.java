@@ -2,6 +2,7 @@ package com.easy.evolutionsimulator;
 
 public class Animal {
     public Integer speed, strength, sense, size, energy, agro, age, id;
+    public int posX, posY;
 
     public Animal() {
         age = 0;
@@ -14,6 +15,19 @@ public class Animal {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public void setPosX(int posX) {
+        this.posX = posX;
+    }
+
+    public void setPosY(int posY) {
+        this.posY = posY;
+    }
+
+    public void setPosition(int posX, int posY) {
+        this.posX = posX;
+        this.posY = posY;
     }
 
     public void setAge(Integer age) {
@@ -42,6 +56,19 @@ public class Animal {
 
     public void setStrength(Integer strength) {
         this.strength = strength;
+    }
+
+    public void modPosX(int posX) {
+        this.posX += posX;
+    }
+
+    public void modPosY(int posY) {
+        this.posY += posY;
+    }
+
+    public void modPosition(int posX, int posY) {
+        this.posX += posX;
+        this.posY += posY;
     }
 
     public void modAge(Integer age) {

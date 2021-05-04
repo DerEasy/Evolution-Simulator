@@ -21,10 +21,10 @@ public class Main {
     public Main() {
         envLogic = new Environment(6, 6);
         envLogic.spawnBlobs(1, "default", false);
-        /*envLogic.spawnBlobs(1, "default", false, 0, 3);
-        envLogic.spawnFood(1, "default", true ,2, 4);
-        envLogic.spawnFood(1, "default", false ,3, 0);
-        envLogic.spawnFood(1, "default", false ,0, 2);*/
+        //envLogic.spawnBlobs(1, "default", false, 4, 3);
+        //envLogic.spawnFood(1, "default", true, 0, 0);
+        //envLogic.spawnFood(1, "default", false ,3, 0);
+        //envLogic.spawnFood(1, "default", false ,0, 2);
 
         hasBlob = new boolean[dimX + 1][dimY + 1];
         hasFood = new boolean[dimX + 1][dimY + 1];
@@ -38,8 +38,8 @@ public class Main {
             timeElapsed = (double) (finishTime - startTime) / 1000000000;
             logEnv();
             printEnv();
-            envLogic.startDay(1, 3, "default");
-            envLogic.endDay(3);
+            envLogic.startDay(1, 4, "default");
+            envLogic.endDay(1);
         }
         logEnv();
     }
