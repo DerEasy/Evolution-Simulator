@@ -74,18 +74,56 @@ public class Calc {
         throw new IndexOutOfBoundsException("Calc: Exclusion key is out of range.");
     }
 
+    //Defines valid mutations of the agro gene. This is used as nextInt() does not exclude 0
+    //and if you try to shift the result by subtracting a certain amount of it, either the
+    //positive or the negative side will have a higher chance of occurring.
+    public static final int[] agroMutations = {-4, -3, -2, -1, 0, 1, 2, 3, 4};
+
+    /**
+     * Gets a valid agro mutation defined by the agroMutations array. All mutations have an
+     * equal chance of occurring.
+     * @return The mutation shift integer
+     */
+    public static int getValidAgroMutation() {
+        return agroMutations[rng.nextInt(9)];
+    }
+
+    //Defines valid mutations of the agro gene. This is used as nextInt() does not exclude 0
+    //and if you try to shift the result by subtracting a certain amount of it, either the
+    //positive or the negative side will have a higher chance of occurring.
+    public static final int[] sizeMutations = {-4, -3, -2, -1, 0, 1, 2, 3, 4};
+
+    /**
+     * Gets a valid size mutation defined by the sizeMutations array. All mutations have an
+     * equal chance of occurring.
+     * @return The mutation shift integer
+     */
+    public static int getValidSizeMutation() {
+        return sizeMutations[rng.nextInt(9)];
+    }
+
     /**
      * Calculates probabilities by providing a percentage from (typically) 0 to 100.
      * Example: If the percentage parameter is 25, there is a 1/4 chance of returning true.
      * @param percent Percentage probability of returning true
      * @return True if random number was in the given range
      */
-    public static boolean calcProb(int percent){
+    public static boolean calcProb(int percent) {
         if (percent >= 100) return true;
         if (percent <= 0) return false;
 
         percent = 100 - percent;
         int i = rng.nextInt(99) + 1;
         return i >= percent;
+    }
+
+    /**
+     * Calculates the result of a logarithm with a custom base.
+     * @param base The desired base
+     * @param a The number that shall be calculated with
+     * @return Result as an int
+     */
+    public static int logN(int base, int a) {
+        return (int) Math.round((Math.log(a) / Math.log(base)));
     }
 }

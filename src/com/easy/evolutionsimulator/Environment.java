@@ -3,6 +3,7 @@ package com.easy.evolutionsimulator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.easy.evolutionsimulator.Calc.*;
 import static com.easy.evolutionsimulator.Log.*;
 
 public class Environment {
@@ -101,8 +102,8 @@ public class Environment {
         int posX, posY;
 
         while (foodAmount < amount) {
-            posX = Calc.rng.nextInt(dimX + 1);
-            posY = Calc.rng.nextInt(dimY + 1);
+            posX = rng.nextInt(dimX + 1);
+            posY = rng.nextInt(dimY + 1);
             if (foodType == null) foodHash.put(fid, new Food(posX, posY));
             else foodHash.put(fid, new Food(foodType, posX, posY));
             fid++;
@@ -123,8 +124,8 @@ public class Environment {
         int posX, posY;
 
         for (int i = 0; i < amount; i++) {
-            posX = Calc.rng.nextInt(dimX + 1);
-            posY = Calc.rng.nextInt(dimY + 1);
+            posX = rng.nextInt(dimX + 1);
+            posY = rng.nextInt(dimY + 1);
             if (foodType == null) foodHash.put(fid, new Food(posX, posY));
             else foodHash.put(fid, new Food(foodType, posX, posY));
             fid++;
@@ -158,8 +159,8 @@ public class Environment {
         int posX, posY;
 
         for (int i = 0; i < amount; i++) {
-            posX = Calc.rng.nextInt(dimX + 1);
-            posY = Calc.rng.nextInt(dimY + 1);
+            posX = rng.nextInt(dimX + 1);
+            posY = rng.nextInt(dimY + 1);
             blobHash.put(id, new Blob(species, posX, posY));
             id++;
         }
@@ -188,9 +189,9 @@ public class Environment {
         int exKey = blob.getExKey();
 
         if (blob.foodX == null && exKey == 0) {
-            blob.moveBlob(Calc.rng.nextInt(9), blob.speed);
+            blob.moveBlob(rng.nextInt(9), blob.speed);
         } else if (blob.foodX == null && exKey > 0) {
-            blob.moveBlob(Calc.getValidDirKey(exKey), blob.speed);
+            blob.moveBlob(getValidDirKey(exKey), blob.speed);
         } else {
             blob.moveBlob(blob.dirFood, blob.adjustedSpeed);
         }
@@ -204,8 +205,8 @@ public class Environment {
 
         for (Map.Entry<Integer, Blob> blobEntity : blobHash.entrySet()) {
             blob = blobEntity.getValue();
-            blob.setPosX(Calc.rng.nextInt(dimX + 1));
-            blob.setPosY(Calc.rng.nextInt(dimY + 1));
+            blob.setPosX(rng.nextInt(dimX + 1));
+            blob.setPosY(rng.nextInt(dimY + 1));
         }
     }
 
@@ -239,7 +240,8 @@ public class Environment {
                 } else {
                     moveBlob(blob);
                 }
-                blob.modEnergy(-1);
+                if(blob.size > 33) blob.modEnergy((int) Math.round(-0.03 * blob.size));
+                else blob.modEnergy(-1);
             }
         }
     }
@@ -271,10 +273,10 @@ public class Environment {
                         blob.speed,
                         blob.sense,
                         blob.strength,
-                        blob.size - (Calc.rng.nextInt(4) + 1),
-                        blob.agro,
-                        Calc.rng.nextInt(dimX + 1),
-                        Calc.rng.nextInt(dimX + 1)));
+                        blob.size + getValidSizeMutation(),
+                        blob.agro + getValidAgroMutation(),
+                        rng.nextInt(dimX + 1),
+                        rng.nextInt(dimX + 1)));
                 blobBirths++;
             }
         }

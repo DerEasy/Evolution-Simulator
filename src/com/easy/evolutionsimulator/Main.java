@@ -22,21 +22,22 @@ public class Main {
     public Main() {
         envLogic = new Environment(8, 8);
         envLogic.spawnBlobs(3, "default", false);
-        envLogic.spawnBlobs(6, "small", false);
+        envLogic.spawnBlobs(3, "small", false);
 
         hasBlob = new boolean[dimX + 1][dimY + 1];
         hasFood = new boolean[dimX + 1][dimY + 1];
 
-        startSimulation(0, 0, true, 0, 1, 4, "default");
+        startSimulation(0, 0, 0,true, 0, 1, 6, "default");
     }
 
-    public void startSimulation(int days, int foodAmountToEat, boolean printEnv, int maxBlobs, int moveCount, int foodCount, String foodType) {
+    public void startSimulation(int days, int foodAmountToEat, int runTime, boolean printEnv, int maxBlobs, int moveCount, int foodCount, String foodType) {
         if (days == 0) days = Integer.MAX_VALUE;
         if (foodAmountToEat == 0) foodAmountToEat = Integer.MAX_VALUE;
+        if (runTime == 0) runTime = Integer.MAX_VALUE;
         printEnvEnabled = printEnv && (dimX + 1) <= 80 && (dimY + 1) <= 80;
 
         if (printEnvEnabled) {
-            while (blobAmount > 0 && day <= days && foodEaten < foodAmountToEat) {
+            while (blobAmount > 0 && day <= days && foodEaten < foodAmountToEat && timeElapsed <= runTime) {
                 //Logging
                 finishTime = System.nanoTime();
                 timeElapsed = (double) (finishTime - startTime) / 1000000000;
@@ -48,7 +49,7 @@ public class Main {
                 envLogic.endDay(maxBlobs);
             }
         } else {
-            while (blobAmount > 0 && day <= days && foodEaten < foodAmountToEat) {
+            while (blobAmount > 0 && day <= days && foodEaten < foodAmountToEat && timeElapsed <= runTime) {
                 //Logging
                 finishTime = System.nanoTime();
                 timeElapsed = (double) (finishTime - startTime) / 1000000000;

@@ -1,5 +1,7 @@
 package com.easy.evolutionsimulator;
 
+import static com.easy.evolutionsimulator.Calc.calcProb;
+
 public abstract class Animal {
     public Integer speed, strength, sense, size, energy, agro, age, id;
     public int posX, posY;
@@ -9,7 +11,7 @@ public abstract class Animal {
     }
 
     public boolean willReproduce() {
-        if (age > 10) return Calc.calcProb((int) Math.pow((0.040 * (energy + 20)), 3));
+        if (age > 5) return calcProb((int) Math.pow((0.04 * (energy + 20)), 3));
         else return false;
     }
 
@@ -36,6 +38,8 @@ public abstract class Animal {
 
     public void setAgro(Integer agro) {
         this.agro = agro;
+        if (this.agro > 100) setAgro(100);
+        else if (this.agro < 0) setAgro(0);
     }
 
     public void setEnergy(Integer energy) {
@@ -48,6 +52,8 @@ public abstract class Animal {
 
     public void setSize(Integer size) {
         this.size = size;
+        if (this.size > 100) setSize(100);
+        else if (this.size < 1) setSize(1);
     }
 
     public void setSpeed(Integer speed) {
@@ -77,10 +83,13 @@ public abstract class Animal {
 
     public void modAgro(Integer agro) {
         this.agro += agro;
+        if (this.agro > 100) setAgro(100);
+        else if (this.agro < 0) setAgro(0);
     }
 
     public void modEnergy(Integer energy) {
         this.energy += energy;
+        if (this.energy > 100) setEnergy(100);
     }
 
     public void modSense(Integer sense) {
@@ -89,6 +98,8 @@ public abstract class Animal {
 
     public void modSize(Integer size) {
         this.size += size;
+        if (this.size > 100) setSize(100);
+        else if (this.size < 1) setSize(1);
     }
 
     public void modSpeed(Integer speed) {

@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static com.easy.evolutionsimulator.Environment.*;
 import static com.easy.evolutionsimulator.Log.*;
+import static com.easy.evolutionsimulator.Calc.*;
 import static com.easy.evolutionsimulator.Main.printEnvEnabled;
 
 public class Blob extends Animal {
@@ -15,16 +16,24 @@ public class Blob extends Animal {
 
     public Blob(String species) {
         switch (species) {
-            case "default" -> defaultBlob();
-            case "small" -> smallBlob();
+            case "default" -> {
+                defaultBlob();
+            }
+            case "small" -> {
+                smallBlob();
+            }
         }
         blobAmount++;
     }
 
     public Blob(String species, int x, int y) {
         switch (species) {
-            case "default" -> defaultBlob();
-            case "small" -> smallBlob();
+            case "default" -> {
+                defaultBlob();
+            }
+            case "small" -> {
+                smallBlob();
+            }
         }
         posX = x;
         posY = y;
@@ -63,7 +72,8 @@ public class Blob extends Animal {
         setEnergy(60); //Energy from 0 to 100
         setSense(3); //Radius a Blob can scavenge/scan - in blocks (applies for diagonals as well). Amount of blocks: (2x + 1)²
         setSpeed(1); //Amount of blocks a Blob can pass in one go
-        setSize(15); //Size from 1 to 100
+        setSize(30); //Size from 1 to 100
+        setAgro(30); //Aggressiveness from 0 to 100
     }
 
     public void smallBlob() {
@@ -71,7 +81,8 @@ public class Blob extends Animal {
         setEnergy(60); //Energy from 0 to 100
         setSense(3); //Radius a Blob can scavenge/scan - in blocks (applies for diagonals as well). Amount of blocks: (2x + 1)²
         setSpeed(2); //Amount of blocks a Blob can pass in one go
-        setSize(10); //Size from 1 to 100
+        setSize(20); //Size from 1 to 100
+        setAgro(40); //Aggressiveness from 0 to 100
     }
 
 
@@ -125,7 +136,12 @@ public class Blob extends Animal {
             }
         }
 
-        if (direction != 0) modEnergy(-5);
+        if (direction != 0) {
+            if (size < 25) modEnergy(-3);
+            else modEnergy((int) Math.round(-0.12 * size));
+
+            modEnergy(Math.round(-agro / 30));
+        }
         correctPos();
     }
 
@@ -222,10 +238,11 @@ public class Blob extends Animal {
 
     /**
      * If the Blob meets another Blob on the same block, it will eat it if
-     * it's 20% bigger than it. A Blob can eat 2 other Blobs at most in one go.
+     * it's 20% bigger than it. A Blob can eat 1 other Blob at most in one go.
      * @return True if a Blob has been eaten
      */
     public boolean eatBlob() {
+        if (size < 8) return false;
         Blob blob;
         int blobsEaten = 0;
 
@@ -235,19 +252,43 @@ public class Blob extends Animal {
             if (energy >= 100 && blobsEaten > 0) return true;
             if (energy >= 100 && blobsEaten == 0) return false;
 
-            if (blob.posX == posX && blob.posY == posY &&
-                    size >= blob.size + (blob.size * 0.2) && blobsEaten <= 2) {
-                
-                modEnergy((int) (blob.size / 2.5));
-                modSize(1);
-                blobHash.remove(blobEntity.getKey());
-                blobDeaths++;
-                blobsEaten++;
-                blobAmount--;
-                Log.blobsEaten++;
+            if (blob.posX == posX && blob.posY == posY && blobsEaten <= 1 &&
+                    blob.age >= 10 && size >= blob.size + (blob.size * 0.2)) {
+
+                int minSizeDiff = (int) (size - (blob.size + (blob.size * 0.2)));
+                int agroDiff = agro - blob.agro;
+                int eatProb = 50 + agroDiff;
+
+                if (calcProb((eatProb + minSizeDiff))) {
+                    modEnergy((blob.size / 8));
+                    modSize(1);
+                    blobHash.remove(blobEntity.getKey());
+                    blobDeaths++;
+                    blobsEaten++;
+                    blobAmount--;
+                    Log.blobsEaten++;
+                } else {
+                    modEnergy(-(blob.size / 6));
+                    blob.modEnergy(-minSizeDiff);
+                    //blob.modAgro(1);
+                    blobsDefeated++;
+                }
             }
         }
+        growOrShrink();
         return blobsEaten > 0;
+    }
+
+    public void growOrShrink() {
+        if (energy < (size * 0.8)) {
+            modSize((int) -(size * 0.1));
+        } else if (energy > (size * 0.2)) {
+            modSize(1);
+        }
+        if (age > 35) {
+            modSize((int) -(size * 0.1));
+            modEnergy(-3);
+        }
     }
 
     /**
