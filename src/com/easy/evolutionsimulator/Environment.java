@@ -19,37 +19,29 @@ public class Environment {
         boolean available = true;
 
         public Food() {
-            satietyDefault();
+            setSatiety(15);
+            setPosition(rng.nextInt(dimX + 1), rng.nextInt(dimY + 1));
             setFID(Environment.fid);
             foodAmount++;
         }
 
         public Food(int posX, int posY) {
-            satietyDefault();
-            this.posX = posX;
-            this.posY = posY;
+            setSatiety(15);
+            setPosition(posX, posY);
             setFID(Environment.fid);
             foodAmount++;
         }
 
-        public Food(String satietyLevel) {
-            switch (satietyLevel) {
-                case "default" -> satietyDefault();
-                case "low" -> satietyLow();
-                case "high" -> satietyHigh();
-            }
+        public Food(int satietyLevel) {
+            setSatiety(satietyLevel);
+            setPosition(rng.nextInt(dimX + 1), rng.nextInt(dimY + 1));
             setFID(Environment.fid);
             foodAmount++;
         }
 
-        public Food(String satietyLevel, int posX, int posY) {
-            switch (satietyLevel) {
-                case "default" -> satietyDefault();
-                case "low" -> satietyLow();
-                case "high" -> satietyHigh();
-            }
-            this.posX = posX;
-            this.posY = posY;
+        public Food(int satietyLevel, int posX, int posY) {
+            setSatiety(satietyLevel);
+            setPosition(posX, posY);
             setFID(Environment.fid);
             foodAmount++;
         }
@@ -61,21 +53,6 @@ public class Environment {
         public void setPosition(int posX, int posY) {
             this.posX = posX;
             this.posY = posY;
-        }
-
-        public void setPosX(int posX) { this.posX = posX; }
-        public void setPosY(int posY) { this.posY = posY; }
-
-        public void satietyDefault() {
-            satiety = 15;
-        }
-
-        public void satietyLow() {
-            satiety = 10;
-        }
-
-        public void satietyHigh() {
-            satiety = 20;
         }
 
         public void setSatiety(int satiety) {
@@ -96,51 +73,44 @@ public class Environment {
     /**
      * Fills the list of food entities until its size matches with the given amount.
      * @param amount Amount of food that should be in the environment in total
-     * @param foodType Type of food
+     * @param foodSatiety Type of food
      */
-    public void fillFood(int amount, String foodType) {
-        int posX, posY;
-
+    public void fillFood(int amount, int foodSatiety) {
         while (foodAmount < amount) {
-            posX = rng.nextInt(dimX + 1);
-            posY = rng.nextInt(dimY + 1);
-            if (foodType == null) foodHash.put(fid, new Food(posX, posY));
-            else foodHash.put(fid, new Food(foodType, posX, posY));
+            if (foodSatiety == 0) foodHash.put(fid, new Food());
+            else foodHash.put(fid, new Food(foodSatiety));
             fid++;
         }
     }
 
     /**
-     * Spawns a certain amount of food of a specific food type.
+     * Spawns a certain amount of food of a specific satiety.
      * @param amount Amount of food to be created
-     * @param foodType The food type you want to spawn
+     * @param foodSatiety The food type you want to spawn
      * @param clearEntities True to clear the list of all Food entities
      */
-    public void spawnFood(int amount, String foodType, boolean clearEntities) {
+    public void spawnFood(int amount, int foodSatiety, boolean clearEntities) {
         if (clearEntities) {
             foodHash.clear();
             fid = 0;
         }
-        int posX, posY;
 
         for (int i = 0; i < amount; i++) {
-            posX = rng.nextInt(dimX + 1);
-            posY = rng.nextInt(dimY + 1);
-            if (foodType == null) foodHash.put(fid, new Food(posX, posY));
-            else foodHash.put(fid, new Food(foodType, posX, posY));
+            if (foodSatiety == 0) foodHash.put(fid, new Food());
+            else foodHash.put(fid, new Food(foodSatiety));
             fid++;
         }
     }
 
-    public void spawnFood(int amount, String foodType, boolean clearEntities, int posX, int posY) {
+    public void spawnFood(int amount, int foodSatiety, boolean clearEntities, int posX, int posY) {
         if (clearEntities) {
             foodHash.clear();
             fid = 0;
         }
 
         for (int i = 0; i < amount; i++) {
-            if (foodType == null) foodHash.put(fid, new Food(posX, posY));
-            else foodHash.put(fid, new Food(foodType, posX, posY));
+            if (foodSatiety == 0) foodHash.put(fid, new Food(posX, posY));
+            else foodHash.put(fid, new Food(foodSatiety, posX, posY));
             fid++;
         }
     }
@@ -148,32 +118,28 @@ public class Environment {
     /**
      * Spawns a certain amount of Blobs of a specific species.
      * @param amount Amount of Blobs to be created
-     * @param species The species you want to spawn
      * @param clearEntities True to clear the list of all Blob entities
      */
-    public void spawnBlobs(int amount, String species, boolean clearEntities) {
+    public void spawnBlobs(int amount, int sense, int speed, int size, int agro, boolean clearEntities) {
         if (clearEntities) {
             blobHash.clear();
             id = 0;
         }
-        int posX, posY;
 
         for (int i = 0; i < amount; i++) {
-            posX = rng.nextInt(dimX + 1);
-            posY = rng.nextInt(dimY + 1);
-            blobHash.put(id, new Blob(species, posX, posY));
+            blobHash.put(id, new Blob(id, 60, speed, sense, size, agro));
             id++;
         }
     }
 
-    public void spawnBlobs(int amount, String species, boolean clearEntities, int posX, int posY) {
+    public void spawnBlobs(int amount, int sense, int speed, int size, int agro, boolean clearEntities, int posX, int posY) {
         if (clearEntities) {
             blobHash.clear();
             id = 0;
         }
 
         for (int i = 0; i < amount; i++) {
-            blobHash.put(id, new Blob(species, posX, posY));
+            blobHash.put(id, new Blob(id, 60, speed, sense, size, agro, posX, posY));
             id++;
         }
     }
@@ -205,8 +171,7 @@ public class Environment {
 
         for (Map.Entry<Integer, Blob> blobEntity : blobHash.entrySet()) {
             blob = blobEntity.getValue();
-            blob.setPosX(rng.nextInt(dimX + 1));
-            blob.setPosY(rng.nextInt(dimY + 1));
+            blob.setPosition(rng.nextInt(dimX + 1), rng.nextInt(dimY + 1));
         }
     }
 
@@ -214,21 +179,19 @@ public class Environment {
      * Starts a new day the Blobs must survive.
      * @param moveCount Amount of moves a Blob will do
      * @param foodCount Amount of food entities in the environment in total
-     * @param foodType Type of food
+     * @param foodSatiety Satiety level of food
      */
-    public void startDay(int moveCount, int foodCount, String foodType) {
+    public void startDay(int moveCount, int foodCount, int foodSatiety) {
         day++;
         Blob blob;
-        fillFood(foodCount, foodType);
-        //spawnBlobs(2, "small", false);
+        fillFood(foodCount, foodSatiety);
 
         for (int i = 0; i < moveCount; i++) {
             for (Map.Entry<Integer, Blob> blobEntity : blobHash.entrySet()) {
                 blob = blobEntity.getValue();
-                if (blob.size > 100) blob.setSize(100);
                 logBlob(blob);
-                blob.eatBlob();
 
+                blob.eatBlob();
                 if (blob.foodX != null || blob.senseFood()) {
                     blob.calcDirectionKey();
                     moveBlob(blob);
@@ -265,19 +228,17 @@ public class Environment {
                 continue;
             } else if (blob.energy > 100) blob.energy = 100;
 
-            if(blobAmount < maxBlobs && blob.willReproduce()) {
+            if(blobAmount < maxBlobs && (day - blob.reproductionDate) >= 5 && blob.willReproduce()) {
                 id++;
                 blobHash.put(id, new Blob(
                         id,
-                        60,
-                        blob.speed,
-                        blob.sense,
-                        blob.strength,
+                        (int) (blob.energy - (blob.energy * 0.4)),
+                        blob.speed + getValidSpeedMutation(blob),
+                        blob.sense + getValidSenseMutation(blob),
                         blob.size + getValidSizeMutation(),
-                        blob.agro + getValidAgroMutation(),
-                        rng.nextInt(dimX + 1),
-                        rng.nextInt(dimX + 1)));
+                        blob.agro + getValidAgroMutation()));
                 blobBirths++;
+                blob.setReproductionDate(day);
             }
         }
     }

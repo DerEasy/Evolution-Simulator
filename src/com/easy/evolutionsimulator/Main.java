@@ -1,65 +1,121 @@
 package com.easy.evolutionsimulator;
 
 import java.util.Map;
+import java.util.Scanner;
 
 import static com.easy.evolutionsimulator.Environment.*;
 import static com.easy.evolutionsimulator.Log.*;
 import static com.easy.evolutionsimulator.Blob.*;
 
 public class Main {
-    Environment envLogic;
+    static Environment envLogic;
     static boolean[][] hasBlob;
     static boolean[][] hasFood;
     static long startTime, finishTime;
     static double timeElapsed;
     static boolean printEnvEnabled;
+    static Scanner sc = new Scanner(System.in);
 
     public static void main(String[] args) {
-        startTime = System.nanoTime();
-        new Main();
+        int dimX, dimY;
+        int amount, sense, speed, size, agro;
+        int days, foodAmountToEat, runTime, pauseTime, maxBlobs, moveCount, foodAmount, foodSatiety;
+        int booleanChoice;
+        boolean clearEntities = false;
+        boolean printEnv = true;
+
+        System.out.println("\n\n\nEvolution Simulator\n\n");
+
+        System.out.println("Size of x dimension:");
+        dimX = sc.nextInt();
+        System.out.println("Size of y dimension:");
+        dimY = sc.nextInt();
+
+        envLogic = new Environment(dimX, dimY);
+        hasBlob = new boolean[Environment.dimX + 1][Environment.dimY + 1];
+        hasFood = new boolean[Environment.dimX + 1][Environment.dimY + 1];
+
+        while (true) {
+            System.out.println("Spawn Blobs? 0/1:");
+            booleanChoice = sc.nextInt();
+            if (booleanChoice == 1) {
+                System.out.println("Clear all current entities? 0/1:");
+                booleanChoice = sc.nextInt();
+                if (booleanChoice == 1) clearEntities = true;
+                else if (booleanChoice == 0) clearEntities = false;
+                System.out.println("Amount:");
+                amount = sc.nextInt();
+                System.out.println("Sense value (Keep it very low):");
+                sense = sc.nextInt();
+                System.out.println("Speed value (Keep it very low):");
+                speed = sc.nextInt();
+                System.out.println("Size value (1 - 100):");
+                size = sc.nextInt();
+                System.out.println("Agro value (0 - 100):");
+                agro = sc.nextInt();
+
+                envLogic.spawnBlobs(amount, sense, speed, size, agro, clearEntities);
+            } else if (booleanChoice == 0) break;
+        }
+
+        System.out.println("How many days shall be simulated? 0 to continue running indefinitely:");
+        days = sc.nextInt();
+        System.out.println("At what number of food that has been eaten shall the simulation stop? 0 to disable:");
+        foodAmountToEat = sc.nextInt();
+        System.out.println("How long in seconds shall the simulation run? 0 to continue running indefinitely:");
+        runTime = sc.nextInt();
+        System.out.println("For how long in ms do you want to pause execution after a day has been simulated? 0 to disable:");
+        pauseTime = sc.nextInt();
+        System.out.println("Do you want to print a visual representation of the environment in the console? 0/1:");
+        booleanChoice = sc.nextInt();
+        if (booleanChoice == 1) printEnv = true;
+        else if (booleanChoice == 0) printEnv = false;
+        System.out.println("How many Blobs may be in the environment at once? 0 to disable population limit:");
+        maxBlobs = sc.nextInt();
+        System.out.println("How many moves shall the Blobs do in one day? Default is 1:");
+        moveCount = sc.nextInt();
+        System.out.println("How much food shall be available everyday?");
+        foodAmount = sc.nextInt();
+        System.out.println("Food satiety? Default is 15:");
+        foodSatiety = sc.nextInt();
+
+        System.out.println("Ready. Start simulation? 0/1:");
+        booleanChoice = sc.nextInt();
+        if (booleanChoice == 1) {
+            sc.close();
+            startSimulation(days, foodAmountToEat, runTime, pauseTime, printEnv, maxBlobs, moveCount, foodAmount, foodSatiety);
+        } else if (booleanChoice == 0) System.exit(0);
     }
 
-    public Main() {
-        envLogic = new Environment(8, 8);
-        envLogic.spawnBlobs(3, "default", false);
-        envLogic.spawnBlobs(3, "small", false);
+    public static void startSimulation(int days, int foodAmountToEat, int runTime, int pauseTime,
+                                boolean printEnv, int maxBlobs, int moveCount, int foodAmount, int foodSatiety) {
 
-        hasBlob = new boolean[dimX + 1][dimY + 1];
-        hasFood = new boolean[dimX + 1][dimY + 1];
-
-        startSimulation(0, 0, 0,true, 0, 1, 6, "default");
-    }
-
-    public void startSimulation(int days, int foodAmountToEat, int runTime, boolean printEnv, int maxBlobs, int moveCount, int foodCount, String foodType) {
         if (days == 0) days = Integer.MAX_VALUE;
         if (foodAmountToEat == 0) foodAmountToEat = Integer.MAX_VALUE;
         if (runTime == 0) runTime = Integer.MAX_VALUE;
         printEnvEnabled = printEnv && (dimX + 1) <= 80 && (dimY + 1) <= 80;
+        startTime = System.nanoTime();
 
-        if (printEnvEnabled) {
-            while (blobAmount > 0 && day <= days && foodEaten < foodAmountToEat && timeElapsed <= runTime) {
-                //Logging
-                finishTime = System.nanoTime();
-                timeElapsed = (double) (finishTime - startTime) / 1000000000;
-                logEnv();
-                printEnv();
+        while (blobAmount > 0 && day <= days && foodEaten < foodAmountToEat && timeElapsed <= runTime) {
+            //Logging
+            finishTime = System.nanoTime();
+            timeElapsed = (double) (finishTime - startTime) / 1000000000;
+            logEnv();
+            if (printEnvEnabled) printEnv();
 
-                //Simulation
-                envLogic.startDay(moveCount, foodCount, foodType);
-                envLogic.endDay(maxBlobs);
-            }
-        } else {
-            while (blobAmount > 0 && day <= days && foodEaten < foodAmountToEat && timeElapsed <= runTime) {
-                //Logging
-                finishTime = System.nanoTime();
-                timeElapsed = (double) (finishTime - startTime) / 1000000000;
-                logEnv();
+            //Simulation
+            envLogic.startDay(moveCount, foodAmount, foodSatiety);
+            envLogic.endDay(maxBlobs);
 
-                //Simulation
-                envLogic.startDay(moveCount, foodCount, foodType);
-                envLogic.endDay(maxBlobs);
+            if (pauseTime > 0) {
+                try {
+                    Thread.sleep(pauseTime);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
+
         //Output last data that was made available at the end
         logEnv();
     }

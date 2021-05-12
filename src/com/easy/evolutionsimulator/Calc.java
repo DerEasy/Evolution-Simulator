@@ -5,16 +5,14 @@ import java.security.SecureRandom;
 public class Calc {
     public static SecureRandom rng = new SecureRandom();
 
-    /*
-    1   2   3
-    8   0   4
-    7   6   5
-    */
-
+    //Defines the valid mutation shifts
+    public static final int[] agroMutations = {-4, -3, -2, -1, 0, 1, 2, 3, 4};
+    public static final int[] sizeMutations = {-4, -3, -2, -1, 0, 1, 2, 3, 4};
+    public static final int[] speedMutations = {-1, 0, 1};
+    public static final int[] senseMutations = {-1, 0, 1};
 
     //Defines the accepted direction keys incorporating the exceptions mandated by the exclusion key.
     //Read e.g. exTopLeft as "Except movements to the top left".
-
     public static final int[] exTopLeft     = {0, 4, 5, 6};         //exKey: 1
     public static final int[] exTop         = {0, 4, 5, 6, 7, 8};   //exKey: 2
     public static final int[] exTopRight    = {0, 6, 7, 8};         //exKey: 3
@@ -23,6 +21,7 @@ public class Calc {
     public static final int[] exBottom      = {0, 1, 2, 3, 4, 8};   //exKey: 6
     public static final int[] exBottomLeft  = {0, 2, 3, 4};         //exKey: 7
     public static final int[] exLeft        = {0, 2, 3, 4, 5, 6};   //exKey: 8
+
 
     /**
      * Gets a valid direction key. Exceptions are ruled out with the exclusion key.
@@ -41,6 +40,12 @@ public class Calc {
      * @return A valid direction key
      */
     public static int getValidDirKey(int exKey) {
+        /*
+        1   2   3
+        8   0   4
+        7   6   5
+        */
+
         int index = 0;
 
         //Check if index range is 4 or 6.
@@ -74,30 +79,20 @@ public class Calc {
         throw new IndexOutOfBoundsException("Calc: Exclusion key is out of range.");
     }
 
-    //Defines valid mutations of the agro gene. This is used as nextInt() does not exclude 0
-    //and if you try to shift the result by subtracting a certain amount of it, either the
-    //positive or the negative side will have a higher chance of occurring.
-    public static final int[] agroMutations = {-4, -3, -2, -1, 0, 1, 2, 3, 4};
+    public static int getValidSpeedMutation(Blob blob) {
+        if (blob.speed > 1) return speedMutations[rng.nextInt(3)];
+        else return senseMutations[rng.nextInt(2) + 1];
+    }
 
-    /**
-     * Gets a valid agro mutation defined by the agroMutations array. All mutations have an
-     * equal chance of occurring.
-     * @return The mutation shift integer
-     */
+    public static int getValidSenseMutation(Blob blob) {
+        if (blob.sense > 1) return senseMutations[rng.nextInt(3)];
+        else return senseMutations[rng.nextInt(2) + 1];
+    }
+
     public static int getValidAgroMutation() {
         return agroMutations[rng.nextInt(9)];
     }
 
-    //Defines valid mutations of the agro gene. This is used as nextInt() does not exclude 0
-    //and if you try to shift the result by subtracting a certain amount of it, either the
-    //positive or the negative side will have a higher chance of occurring.
-    public static final int[] sizeMutations = {-4, -3, -2, -1, 0, 1, 2, 3, 4};
-
-    /**
-     * Gets a valid size mutation defined by the sizeMutations array. All mutations have an
-     * equal chance of occurring.
-     * @return The mutation shift integer
-     */
     public static int getValidSizeMutation() {
         return sizeMutations[rng.nextInt(9)];
     }
@@ -115,15 +110,5 @@ public class Calc {
         percent = 100 - percent;
         int i = rng.nextInt(99) + 1;
         return i >= percent;
-    }
-
-    /**
-     * Calculates the result of a logarithm with a custom base.
-     * @param base The desired base
-     * @param a The number that shall be calculated with
-     * @return Result as an int
-     */
-    public static int logN(int base, int a) {
-        return (int) Math.round((Math.log(a) / Math.log(base)));
     }
 }

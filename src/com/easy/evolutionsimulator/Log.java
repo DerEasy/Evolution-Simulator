@@ -16,7 +16,7 @@ public class Log {
     }
 
     public static void logBlob(Blob blob) {
-        System.out.printf("BlobID(%s)\tx: %s\ty: %s\tEnergy: %s\tAge: %s\tSize: %s\tAgro: %s\n",
-                blob.id, blob.posX, blob.posY, blob.energy, blob.age, blob.size, blob.agro);
+        System.out.printf("ID(%s) (%s|%s)\tEnergy(%s)\tAge(%s) \tSize(%s)\tAgro(%s)\tSense(%s)\tSpeed(%s)\n",
+                blob.getID(), blob.posX, blob.posY, blob.getEnergy(), blob.getAge(), blob.getSize(), blob.getAgro(), blob.getSense(), blob.getSpeed());
     }
 }

@@ -14,47 +14,20 @@ public class Blob extends Animal {
     public static ConcurrentLinkedQueue<Integer> removeFoodQueue = new ConcurrentLinkedQueue<>();
     public static int foodQueueSize;
 
-    public Blob(String species) {
-        switch (species) {
-            case "default" -> {
-                defaultBlob();
-            }
-            case "small" -> {
-                smallBlob();
-            }
-        }
-        blobAmount++;
-    }
-
-    public Blob(String species, int x, int y) {
-        switch (species) {
-            case "default" -> {
-                defaultBlob();
-            }
-            case "small" -> {
-                smallBlob();
-            }
-        }
-        posX = x;
-        posY = y;
-        blobAmount++;
-    }
-
-    public Blob(Integer id, Integer energy, Integer speed, Integer sense, Integer strength, Integer size, Integer agro) {
+    public Blob(int id, int energy, int speed, int sense, int size, int agro) {
         setId(id);
         setSpeed(speed);
-        setStrength(strength);
         setSense(sense);
         setSize(size);
         setEnergy(energy);
         setAgro(agro);
+        setPosition(rng.nextInt(dimX + 1), rng.nextInt(dimY + 1));
         blobAmount++;
     }
 
-    public Blob(Integer id, Integer energy, Integer speed, Integer sense, Integer strength, Integer size, Integer agro, int x, int y) {
+    public Blob(int id, int energy, int speed, int sense, int size, int agro, int x, int y) {
         setId(id);
         setSpeed(speed);
-        setStrength(strength);
         setSense(sense);
         setSize(size);
         setEnergy(energy);
@@ -63,29 +36,6 @@ public class Blob extends Animal {
         posY = y;
         blobAmount++;
     }
-
-    /**
-     * Sets default properties of a Blob.
-     */
-    public void defaultBlob() {
-        setId(Environment.id);
-        setEnergy(60); //Energy from 0 to 100
-        setSense(3); //Radius a Blob can scavenge/scan - in blocks (applies for diagonals as well). Amount of blocks: (2x + 1)²
-        setSpeed(1); //Amount of blocks a Blob can pass in one go
-        setSize(30); //Size from 1 to 100
-        setAgro(30); //Aggressiveness from 0 to 100
-    }
-
-    public void smallBlob() {
-        setId(Environment.id);
-        setEnergy(60); //Energy from 0 to 100
-        setSense(3); //Radius a Blob can scavenge/scan - in blocks (applies for diagonals as well). Amount of blocks: (2x + 1)²
-        setSpeed(2); //Amount of blocks a Blob can pass in one go
-        setSize(20); //Size from 1 to 100
-        setAgro(40); //Aggressiveness from 0 to 100
-    }
-
-
 
 
 
@@ -270,7 +220,7 @@ public class Blob extends Animal {
                 } else {
                     modEnergy(-(blob.size / 6));
                     blob.modEnergy(-minSizeDiff);
-                    //blob.modAgro(1);
+                    if (rng.nextBoolean()) blob.modAgro(1);
                     blobsDefeated++;
                 }
             }
@@ -285,7 +235,7 @@ public class Blob extends Animal {
         } else if (energy > (size * 0.2)) {
             modSize(1);
         }
-        if (age > 35) {
+        if (age >= 35) {
             modSize((int) -(size * 0.1));
             modEnergy(-3);
         }
