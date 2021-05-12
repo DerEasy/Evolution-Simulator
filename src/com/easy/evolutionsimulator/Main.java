@@ -25,10 +25,20 @@ public class Main {
         boolean printEnv = true;
 
         System.out.println("\n\n\nEvolution Simulator\n\n");
+        System.out.println("Help:\nYou will want to spawn at least one type of Blob in the environment.\n" +
+                "The dimensions of the environment should not be extremely large to avoid performance problems.\n" +
+                "Optimal dimension values normally have two or three digits. For demonstration purposes, one digit is good.\n\n" +
+                "Do not create an overabundance of food entities. Adjust the amount to a reasonable value according\n to the total amount of blocks in the environment.\n" +
+                "If you increase the amount of moves that Blobs will do in a day, the amount of food must also be\n increased to level out the increased energy consumption\n" +
+                "It is most reasonable to keep size and agro values somewhere at the lower two-digit numbers.\n" +
+                "Sense and speed values should be kept very low in accordance to the dimensions.\n\n" +
+                "Legend for the visual representation system:\no stands for a/multiple Blob entities\nx stands for a/multiple food entities\n" +
+                "i is displayed whenever a/multiple Blob entities stand on the same block as a/multiple food entities.\n" +
+                "The environment will not be printed if either the x or y dimension value exceeds 80.\n");
 
-        System.out.println("Size of x dimension:");
+        System.out.println("Set the size of the x dimension of the environment:");
         dimX = sc.nextInt();
-        System.out.println("Size of y dimension:");
+        System.out.println("Set the size of the y dimension of the environment:");
         dimY = sc.nextInt();
 
         envLogic = new Environment(dimX, dimY);
@@ -36,18 +46,18 @@ public class Main {
         hasFood = new boolean[Environment.dimX + 1][Environment.dimY + 1];
 
         while (true) {
-            System.out.println("Spawn Blobs? 0/1:");
+            System.out.println("Spawn (additional) Blobs? 0/1:");
             booleanChoice = sc.nextInt();
             if (booleanChoice == 1) {
-                System.out.println("Clear all current entities? 0/1:");
+                System.out.println("Clear all previously created entities? 0/1:");
                 booleanChoice = sc.nextInt();
                 if (booleanChoice == 1) clearEntities = true;
                 else if (booleanChoice == 0) clearEntities = false;
-                System.out.println("Amount:");
+                System.out.println("Amount of Blobs to be spawned:");
                 amount = sc.nextInt();
-                System.out.println("Sense value (Keep it very low):");
+                System.out.println("Sense value (Keep it very low, but nonzero):");
                 sense = sc.nextInt();
-                System.out.println("Speed value (Keep it very low):");
+                System.out.println("Speed value (Keep it very low, but nonzero):");
                 speed = sc.nextInt();
                 System.out.println("Size value (1 - 100):");
                 size = sc.nextInt();
@@ -74,9 +84,9 @@ public class Main {
         maxBlobs = sc.nextInt();
         System.out.println("How many moves shall the Blobs do in one day? Default is 1:");
         moveCount = sc.nextInt();
-        System.out.println("How much food shall be available everyday?");
+        System.out.println("How many food entities shall be available everyday?");
         foodAmount = sc.nextInt();
-        System.out.println("Food satiety? Default is 15:");
+        System.out.println("Food satiety (Amount of energy Blobs will get if they eat food)? Default is 15:");
         foodSatiety = sc.nextInt();
 
         System.out.println("Ready. Start simulation? 0/1:");
