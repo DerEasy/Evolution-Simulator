@@ -123,26 +123,26 @@ public class Environment {
      * @param amount Amount of Blobs to be created
      * @param clearEntities True to clear the list of all Blob entities
      */
-    public void spawnBlobs(int amount, int sense, int speed, int size, int agro, boolean clearEntities) {
+    public void spawnBlobs(int amount, int sense, int speed, int size, int agro, int dirProb, boolean clearEntities) {
         if (clearEntities) {
             blobHash.clear();
             id = 0;
         }
 
         for (int i = 0; i < amount; i++) {
-            blobHash.put(id, new Blob(id, 60, speed, sense, size, agro));
+            blobHash.put(id, new Blob(id, 60, speed, sense, size, agro, dirProb));
             id++;
         }
     }
 
-    public void spawnBlobs(int amount, int sense, int speed, int size, int agro, boolean clearEntities, int posX, int posY) {
+    public void spawnBlobs(int amount, int sense, int speed, int size, int agro, int dirProb, boolean clearEntities, int posX, int posY) {
         if (clearEntities) {
             blobHash.clear();
             id = 0;
         }
 
         for (int i = 0; i < amount; i++) {
-            blobHash.put(id, new Blob(id, 60, speed, sense, size, agro, posX, posY));
+            blobHash.put(id, new Blob(id, 60, speed, sense, size, agro, dirProb, posX, posY));
             id++;
         }
     }

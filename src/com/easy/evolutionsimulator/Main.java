@@ -18,7 +18,7 @@ public class Main {
     public static void main(String[] args) {
         int demomode;
         int dimX, dimY;
-        int amount, sense, speed, size, agro;
+        int amount, sense, speed, size, agro, dirProb;
         int days, foodAmountToEat, runTime, pauseTime, maxBlobs, moveCount, foodAmount, foodSatiety;
         int booleanChoice;
         boolean clearEntities = false;
@@ -40,17 +40,17 @@ public class Main {
         demomode = sc.nextInt();
         if (demomode == 1) {
             envLogic = new Environment(8,8, 0);
-            envLogic.spawnBlobs(6,3,1,30,40,true);
+            envLogic.spawnBlobs(6,3,1,30,40, 30,true);
             hasBlob = new boolean[Environment.dimX + 1][Environment.dimY + 1];
             hasFood = new boolean[Environment.dimX + 1][Environment.dimY + 1];
             startSimulation(0,0,0,0,true,1,7, 15);
 
         } else if (demomode == 2){
             envLogic = new Environment(6,6, 1);
-            envLogic.spawnBlobs(1,2,1,30,0,true);
+            envLogic.spawnBlobs(1,1,1,30,0, 50,true);
             hasBlob = new boolean[Environment.dimX + 1][Environment.dimY + 1];
             hasFood = new boolean[Environment.dimX + 1][Environment.dimY + 1];
-            startSimulation(0,0,0,0,true,1,3, 15);
+            startSimulation(0,0,0,800,true,1,3, 15);
 
         } else if (demomode == 0) {
             System.out.println("Set the size of the x dimension of the environment:");
@@ -82,8 +82,10 @@ public class Main {
                     size = sc.nextInt();
                     System.out.println("Agro value (0 - 100):");
                     agro = sc.nextInt();
+                    System.out.println("Probability of travelling in straight lines (0 - 100):");
+                    dirProb = sc.nextInt();
 
-                    envLogic.spawnBlobs(amount, sense, speed, size, agro, clearEntities);
+                    envLogic.spawnBlobs(amount, sense, speed, size, agro, dirProb, clearEntities);
                 } else if (booleanChoice == 0) break;
             }
 
@@ -122,14 +124,15 @@ public class Main {
         if (foodAmountToEat == 0) foodAmountToEat = Integer.MAX_VALUE;
         if (runTime == 0) runTime = Integer.MAX_VALUE;
         printEnvEnabled = printEnv && (dimX + 1) <= 80 && (dimY + 1) <= 80;
+        Log log = new Log();
         startTime = System.nanoTime();
 
         while (blobAmount > 0 && day <= days && foodEaten < foodAmountToEat && timeElapsed <= runTime) {
             //Logging
             finishTime = System.nanoTime();
             timeElapsed = (double) (finishTime - startTime) / 1000000000;
-            logEnv();
-            if (printEnvEnabled) printEnv();
+            log.logEnv();
+            if (printEnvEnabled) log.printEnv();
 
             //Simulation
             envLogic.startDay(moveCount, foodAmount, foodSatiety);
@@ -146,7 +149,7 @@ public class Main {
         }
 
         //Output last data that was made available at the end
-        logEnv();
+        log.logEnv();
         System.out.println("\nEnter anything to exit.");
         sc.next();
     }

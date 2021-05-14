@@ -15,10 +15,10 @@ public abstract class Animal {
     public int posY;
     public int reproductionDate;
     public int dirProb;
+    public int eatCount;
 
     public Animal() {
         age = 0;
-        dirProb = 55;
     }
 
     public boolean willReproduce() {
@@ -78,8 +78,8 @@ public abstract class Animal {
         this.speed = speed;
 
         boolean dimXGreater = dimX >= dimY;
-        if (dimXGreater && this.speed > (dimX / 2)) this.speed = (dimX / 2);
-        else if (!dimXGreater && this.speed > (dimY / 2)) this.speed = (dimY / 2);
+        if (dimXGreater && this.speed > (dimX / 3)) this.speed = (dimX / 3);
+        else if (!dimXGreater && this.speed > (dimY / 3)) this.speed = (dimY / 3);
     }
 
     public void setReproductionDate(int reproductionDate) {
@@ -140,40 +140,5 @@ public abstract class Animal {
         boolean dimXGreater = dimX >= dimY;
         if (dimXGreater && this.speed > (dimX / 2)) this.speed = (dimX / 2);
         else if (!dimXGreater && this.speed > (dimY / 2)) this.speed = (dimY / 2);
-    }
-
-    public String getEnergy() {
-        if (energy >= 10) return String.valueOf(energy);
-        else return "0" + energy;
-    }
-
-    public String getAge() {
-        if (age >= 10) return String.valueOf(age);
-        else return "0" + age;
-    }
-
-    public String getSize() {
-        if (size >= 10) return String.valueOf(size);
-        else return "0" + size;
-    }
-
-    public String getAgro() {
-        if (agro >= 10) return String.valueOf(agro);
-        else return "0" + agro;
-    }
-
-    public String getSense() {
-        if (sense >= 10) return String.valueOf(sense);
-        else return "0" + sense;
-    }
-
-    public String getSpeed() {
-        if (speed >= 10) return String.valueOf(speed);
-        else return "0" + speed;
-    }
-
-    public String getID() {
-        if (id >= 10) return String.valueOf(id);
-        else return "0" + id;
     }
 }

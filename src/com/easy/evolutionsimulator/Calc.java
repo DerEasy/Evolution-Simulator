@@ -7,6 +7,7 @@ public class Calc {
 
     //Defines the valid mutation shifts
     //To control the chances of a specific mutation occurring more often, some values are duplicates.
+    public static final int[] dirProbMutations = {-3, -2, -1, 0, 1, 2, 3};
     public static final int[] agroMutations = {-4, -3, -2, -1, 0, 1, 2, 3, 4};
     public static final int[] sizeMutations = {-4, -3, -2, -1, 0, 1, 2, 3, 4};
     public static final int[] speedMutations = {-1, 0, 0, 0, 0, 0, 1};
@@ -105,21 +106,25 @@ public class Calc {
         throw new IndexOutOfBoundsException("Calc: Exclusion key is out of range.");
     }
 
-    public static int getValidSpeedMutation(Blob blob) {
+    public static int getDirProbMutation() {
+        return dirProbMutations[rng.nextInt(7)];
+    }
+
+    public static int getSpeedMutation(Blob blob) {
         if (blob.speed > 1) return speedMutations[rng.nextInt(7)];
         else return senseMutations[rng.nextInt(6) + 1];
     }
 
-    public static int getValidSenseMutation(Blob blob) {
+    public static int getSenseMutation(Blob blob) {
         if (blob.sense > 1) return senseMutations[rng.nextInt(7)];
         else return senseMutations[rng.nextInt(6) + 1];
     }
 
-    public static int getValidAgroMutation() {
+    public static int getAgroMutation() {
         return agroMutations[rng.nextInt(9)];
     }
 
-    public static int getValidSizeMutation() {
+    public static int getSizeMutation() {
         return sizeMutations[rng.nextInt(9)];
     }
 

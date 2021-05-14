@@ -15,28 +15,32 @@ public class Blob extends Animal {
     public static int foodQueueSize;
     public int prefDir = 0;
     public int reverseDir, tempDir;
+    public ConcurrentLinkedQueue<Integer> recentMoves = new ConcurrentLinkedQueue<>();
+    public int repetition;
 
 
-    public Blob(int id, int energy, int speed, int sense, int size, int agro) {
+    public Blob(int id, int energy, int speed, int sense, int size, int agro, int dirProb) {
         setId(id);
         setSpeed(speed);
         setSense(sense);
         setSize(size);
         setEnergy(energy);
         setAgro(agro);
+        setDirProb(dirProb);
         setPosition(rng.nextInt(dimX + 1), rng.nextInt(dimY + 1));
         blobAmount++;
     }
 
-    public Blob(int id, int energy, int speed, int sense, int size, int agro, int x, int y) {
+    public Blob(int id, int energy, int speed, int sense, int size, int agro, int dirProb, int x, int y) {
         setId(id);
         setSpeed(speed);
         setSense(sense);
         setSize(size);
         setEnergy(energy);
         setAgro(agro);
-        posX = x;
-        posY = y;
+        setDirProb(dirProb);
+        setPosX(x);
+        setPosY(y);
         blobAmount++;
     }
 
@@ -103,6 +107,40 @@ public class Blob extends Animal {
         if (foodX == null) prefDir = direction;
         else prefDir = 0;
         tempDir = direction;
+        addPreviousMove(direction);
+    }
+
+    public void addPreviousMove(Integer direction) {
+        if (recentMoves.size() == 6)  mutateDirProb();
+        recentMoves.add(eatCount);
+        recentMoves.add(direction);
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    public void mutateDirProb() {
+        int firstD, secondD, thirdD, firstE, secondE, thirdE, check = 1;
+        firstD = recentMoves.poll();
+        firstE = recentMoves.poll();
+        secondD = recentMoves.poll();
+        secondE = recentMoves.poll();
+        thirdD = recentMoves.poll();
+        thirdE = recentMoves.poll();
+
+        if (firstD == secondD && firstE > secondE) check++;
+        if (secondD == thirdD && secondE > thirdE) check++;
+
+        if (check == 3) {
+            modDirProb(5);
+            repetition = 0;
+        } else if (check == 2) {
+            modDirProb(2);
+            repetition = 0;
+        } else repetition++;
+
+        if (repetition == 3) {
+            modDirProb(-5);
+            repetition = 0;
+        }
     }
 
     /**
@@ -221,10 +259,10 @@ public class Blob extends Animal {
     /**
      * Makes the Blob eat all food entities found in a block until it is full (Energy >= 100).
      * If Blob is on a block with food on it, the method returns true.
-     * @return True if on a block with food on it
+     * @return True if food has been eaten
      */
     public boolean eatFood() {
-        boolean onFoodBlock = false;
+        boolean ateFood = false;
         if (foodX == null || foodY == null) return false;
 
         for (Map.Entry<Integer, Food> foodEntity : foodHash.entrySet()) {
@@ -237,10 +275,9 @@ public class Blob extends Animal {
                 modEnergy(foodEntity.getValue().satiety);
                 foodAmount--;
                 foodEaten++;
-                onFoodBlock = true;
+                ateFood = true;
 
                 if (printEnvEnabled) {
-                    //removeFoodList.add(foodEntity.getKey());
                     removeFoodQueue.add(foodEntity.getKey());
                     foodQueueSize++;
                     foodEntity.getValue().available = false;
@@ -253,7 +290,7 @@ public class Blob extends Animal {
             }
         }
         adjustedSpeed = speed;
-        return onFoodBlock;
+        return ateFood;
     }
 
     /**
@@ -434,24 +471,25 @@ public class Blob extends Animal {
             blobHash.put(Environment.id, new Blob(
                     Environment.id,
                     (int) (energy - (energy * 0.4)),
-                    speed + getValidSpeedMutation(this),
-                    sense + getValidSenseMutation(this),
-                    size + getValidSizeMutation(),
-                    agro + getValidAgroMutation()));
+                    speed + getSpeedMutation(this),
+                    sense + getSenseMutation(this),
+                    size + getSizeMutation(),
+                    agro + getAgroMutation(),
+                    dirProb + getDirProbMutation()));
             blobBirths++;
             setReproductionDate(day);
         }
     }
 
     public void dailyRoutine() {
-        logBlob(this);
+        logRef.get().logBlob(this);
 
         eatBlob();
         if (foodX != null || senseFood()) {
             calcDirectionKey();
             decideMovement();
             if (calcDirectionKey() == 0) {
-                eatFood();
+                if (eatFood()) eatCount++;
                 foodX = null;
                 foodY = null;
             }
