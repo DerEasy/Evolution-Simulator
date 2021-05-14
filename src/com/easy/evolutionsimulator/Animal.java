@@ -14,9 +14,11 @@ public abstract class Animal {
     public int posX;
     public int posY;
     public int reproductionDate;
+    public int dirProb;
 
     public Animal() {
         age = 0;
+        dirProb = 55;
     }
 
     public boolean willReproduce() {
@@ -39,6 +41,12 @@ public abstract class Animal {
     public void setPosition(int posX, int posY) {
         this.posX = posX;
         this.posY = posY;
+    }
+
+    public void setDirProb(int dirProb) {
+        this.dirProb = dirProb;
+        if (this.dirProb > 100) setDirProb(100);
+        else if (this.dirProb < 0) setDirProb(0);
     }
 
     public void setAgro(Integer agro) {
@@ -93,6 +101,12 @@ public abstract class Animal {
 
     public void modAge(Integer age) {
         this.age += age;
+    }
+
+    public void modDirProb(Integer dirProb) {
+        this.dirProb += dirProb;
+        if (this.dirProb > 100) setDirProb(100);
+        else if (this.dirProb < 0) setDirProb(0);
     }
 
     public void modAgro(Integer agro) {

@@ -1,12 +1,10 @@
 package com.easy.evolutionsimulator;
 
-import java.io.IOException;
-import java.util.Map;
 import java.util.Scanner;
 
-import static com.easy.evolutionsimulator.Environment.*;
+import static com.easy.evolutionsimulator.Environment.dimX;
+import static com.easy.evolutionsimulator.Environment.dimY;
 import static com.easy.evolutionsimulator.Log.*;
-import static com.easy.evolutionsimulator.Blob.*;
 
 public class Main {
     static Environment envLogic;
@@ -38,21 +36,31 @@ public class Main {
                 "i is displayed whenever a/multiple Blob entities stand on the same block as a/multiple food entities.\n" +
                 "The environment will not be printed if either the x or y dimension value exceeds 80.\n\n\n\n");
 
-        System.out.println("Do you want to configure the simulator (0) or run demo mode (1)? 0/1:");
+        System.out.println("Do you want to configure the simulator (0) or run demo mode (1) or dev mode (2)? 0/1/2:");
         demomode = sc.nextInt();
         if (demomode == 1) {
-            envLogic = new Environment(8,8);
+            envLogic = new Environment(8,8, 0);
             envLogic.spawnBlobs(6,3,1,30,40,true);
             hasBlob = new boolean[Environment.dimX + 1][Environment.dimY + 1];
             hasFood = new boolean[Environment.dimX + 1][Environment.dimY + 1];
-            startSimulation(0,0,0,0,true,0,1,7, 15);
+            startSimulation(0,0,0,0,true,1,7, 15);
+
+        } else if (demomode == 2){
+            envLogic = new Environment(6,6, 1);
+            envLogic.spawnBlobs(1,2,1,30,0,true);
+            hasBlob = new boolean[Environment.dimX + 1][Environment.dimY + 1];
+            hasFood = new boolean[Environment.dimX + 1][Environment.dimY + 1];
+            startSimulation(0,0,0,0,true,1,3, 15);
+
         } else if (demomode == 0) {
             System.out.println("Set the size of the x dimension of the environment:");
             dimX = sc.nextInt();
             System.out.println("Set the size of the y dimension of the environment:");
             dimY = sc.nextInt();
+            System.out.println("How many Blobs may be in the environment at once? 0 to disable population limit:");
+            maxBlobs = sc.nextInt();
 
-            envLogic = new Environment(dimX, dimY);
+            envLogic = new Environment(dimX, dimY, maxBlobs);
             hasBlob = new boolean[Environment.dimX + 1][Environment.dimY + 1];
             hasFood = new boolean[Environment.dimX + 1][Environment.dimY + 1];
 
@@ -91,26 +99,24 @@ public class Main {
             booleanChoice = sc.nextInt();
             if (booleanChoice == 1) printEnv = true;
             else if (booleanChoice == 0) printEnv = false;
-            System.out.println("How many Blobs may be in the environment at once? 0 to disable population limit:");
-            maxBlobs = sc.nextInt();
             System.out.println("How many moves shall the Blobs do in one day? Default is 1:");
             moveCount = sc.nextInt();
             System.out.println("How many food entities shall be available everyday?");
             foodAmount = sc.nextInt();
             System.out.println("Food satiety (Amount of energy Blobs will get if they eat food)? Default is 15:");
             foodSatiety = sc.nextInt();
-
             System.out.println("Ready. Start simulation? 0/1:");
             booleanChoice = sc.nextInt();
+
             if (booleanChoice == 1) {
                 //sc.close();
-                startSimulation(days, foodAmountToEat, runTime, pauseTime, printEnv, maxBlobs, moveCount, foodAmount, foodSatiety);
+                startSimulation(days, foodAmountToEat, runTime, pauseTime, printEnv, moveCount, foodAmount, foodSatiety);
             } else if (booleanChoice == 0) System.exit(0);
         }
     }
 
     public static void startSimulation(int days, int foodAmountToEat, int runTime, int pauseTime,
-                                boolean printEnv, int maxBlobs, int moveCount, int foodAmount, int foodSatiety) {
+                                boolean printEnv, int moveCount, int foodAmount, int foodSatiety) {
 
         if (days == 0) days = Integer.MAX_VALUE;
         if (foodAmountToEat == 0) foodAmountToEat = Integer.MAX_VALUE;
@@ -127,10 +133,11 @@ public class Main {
 
             //Simulation
             envLogic.startDay(moveCount, foodAmount, foodSatiety);
-            envLogic.endDay(maxBlobs);
+            envLogic.endDay();
 
             if (pauseTime > 0) {
                 try {
+                    //noinspection BusyWait
                     Thread.sleep(pauseTime);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -142,48 +149,5 @@ public class Main {
         logEnv();
         System.out.println("\nEnter anything to exit.");
         sc.next();
-    }
-
-    /**
-     * Prints a visual representation of the environment to the console.
-     * o is a Blob. x is food. i is both at once.
-     */
-    public static void printEnv() {
-        Blob blob;
-        Food food;
-
-        for (int y = dimY; y >= 0; y--) {
-            for (int x = 0; x <= dimX; x++) {
-                for (Map.Entry<Integer, Blob> blobEntity : blobHash.entrySet()) {
-                    blob = blobEntity.getValue();
-                    hasBlob[x][y] = blob.posX == x && blob.posY == y;
-                    if (hasBlob[x][y]) break;
-                }
-                for (Map.Entry<Integer, Food> foodEntity : foodHash.entrySet()) {
-                    food = foodEntity.getValue();
-                    hasFood[x][y] = food.posX == x && food.posY == y;
-                    if (hasFood[x][y]) break;
-                }
-            }
-        }
-
-        for (int y = dimY; y >= 0; y--) {
-            System.out.print(y + "\t\t");
-            for (int x = 0; x <= dimX; x++) {
-                if (hasBlob[x][y] && !hasFood[x][y]) {
-                    System.out.print("|o");
-                } else if (hasBlob[x][y] && hasFood[x][y]) {
-                    System.out.print("|i");
-                } else if (!hasBlob[x][y] && hasFood[x][y]) {
-                    System.out.print("|x");
-                } else {
-                    System.out.print("| ");
-                }
-            }
-            System.out.println("|");
-        }
-
-        for (int i = 0; i < foodQueueSize; i++) foodHash.remove(removeFoodQueue.poll());
-        foodQueueSize = 0;
     }
 }

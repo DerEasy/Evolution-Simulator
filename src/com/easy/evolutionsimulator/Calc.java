@@ -6,21 +6,24 @@ public class Calc {
     public static SecureRandom rng = new SecureRandom();
 
     //Defines the valid mutation shifts
+    //To control the chances of a specific mutation occurring more often, some values are duplicates.
     public static final int[] agroMutations = {-4, -3, -2, -1, 0, 1, 2, 3, 4};
     public static final int[] sizeMutations = {-4, -3, -2, -1, 0, 1, 2, 3, 4};
-    public static final int[] speedMutations = {-1, 0, 1};
-    public static final int[] senseMutations = {-1, 0, 1};
+    public static final int[] speedMutations = {-1, 0, 0, 0, 0, 0, 1};
+    public static final int[] senseMutations = {-1, 0, 0, 0, 0, 0, 1};
 
     //Defines the accepted direction keys incorporating the exceptions mandated by the exclusion key.
     //Read e.g. exTopLeft as "Except movements to the top left".
-    public static final int[] exTopLeft     = {0, 4, 5, 6};         //exKey: 1
-    public static final int[] exTop         = {0, 4, 5, 6, 7, 8};   //exKey: 2
-    public static final int[] exTopRight    = {0, 6, 7, 8};         //exKey: 3
-    public static final int[] exRight       = {0, 1, 2, 6, 7, 8};   //exKey: 4
-    public static final int[] exBottomRight = {0, 1, 2, 8};         //exKey: 5
-    public static final int[] exBottom      = {0, 1, 2, 3, 4, 8};   //exKey: 6
-    public static final int[] exBottomLeft  = {0, 2, 3, 4};         //exKey: 7
-    public static final int[] exLeft        = {0, 2, 3, 4, 5, 6};   //exKey: 8
+    //To control the chances of a specific direction key occurring more often, some keys are duplicates.
+    public static final int[] freeMovement = {0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8};   //exKey: 0
+    public static final int[] exTopLeft     = {0, 4, 4, 4, 5, 5, 5, 5, 5, 6, 6, 6};                                         //exKey: 1
+    public static final int[] exTop         = {0, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8 ,8};                 //exKey: 2
+    public static final int[] exTopRight    = {0, 6, 6, 6, 7, 7, 7, 7, 7, 8, 8, 8};                                         //exKey: 3
+    public static final int[] exRight       = {0, 1, 1, 1, 1, 2, 2, 2, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 8};                 //exKey: 4
+    public static final int[] exBottomRight = {0, 1, 1, 1, 1, 1, 2, 2, 2, 8, 8, 8};                                         //exKey: 5
+    public static final int[] exBottom      = {0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 8, 8, 8};                 //exKey: 6
+    public static final int[] exBottomLeft  = {0, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4};                                         //exKey: 7
+    public static final int[] exLeft        = {0, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6};                 //exKey: 8
 
 
     /**
@@ -52,9 +55,9 @@ public class Calc {
         //Odd exclusion keys exclude 5 of 9 direction keys.
         //Even exclusion keys exclude 3 of 9 direction keys.
         if (exKey % 2 == 1) {
-            index = rng.nextInt(4);
+            index = rng.nextInt(12);
         } else if (exKey % 2 == 0) {
-            index = rng.nextInt(6);
+            index = rng.nextInt(20);
         }
 
         switch (exKey) {
@@ -79,14 +82,37 @@ public class Calc {
         throw new IndexOutOfBoundsException("Calc: Exclusion key is out of range.");
     }
 
+    public static int[] getValidDirArray(int exKey) {
+        switch (exKey) {
+            case 1:
+                return exTopLeft;
+            case 2:
+                return exTop;
+            case 3:
+                return exTopRight;
+            case 4:
+                return exRight;
+            case 5:
+                return exBottomRight;
+            case 6:
+                return exBottom;
+            case 7:
+                return exBottomLeft;
+            case 8:
+                return exLeft;
+        }
+
+        throw new IndexOutOfBoundsException("Calc: Exclusion key is out of range.");
+    }
+
     public static int getValidSpeedMutation(Blob blob) {
-        if (blob.speed > 1) return speedMutations[rng.nextInt(3)];
-        else return senseMutations[rng.nextInt(2) + 1];
+        if (blob.speed > 1) return speedMutations[rng.nextInt(7)];
+        else return senseMutations[rng.nextInt(6) + 1];
     }
 
     public static int getValidSenseMutation(Blob blob) {
-        if (blob.sense > 1) return senseMutations[rng.nextInt(3)];
-        else return senseMutations[rng.nextInt(2) + 1];
+        if (blob.sense > 1) return senseMutations[rng.nextInt(7)];
+        else return senseMutations[rng.nextInt(6) + 1];
     }
 
     public static int getValidAgroMutation() {

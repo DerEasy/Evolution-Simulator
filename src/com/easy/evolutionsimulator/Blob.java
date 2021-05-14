@@ -13,6 +13,9 @@ public class Blob extends Animal {
     public Integer foodX, foodY;
     public static ConcurrentLinkedQueue<Integer> removeFoodQueue = new ConcurrentLinkedQueue<>();
     public static int foodQueueSize;
+    public int prefDir = 0;
+    public int reverseDir, tempDir;
+
 
     public Blob(int id, int energy, int speed, int sense, int size, int agro) {
         setId(id);
@@ -55,6 +58,9 @@ public class Blob extends Animal {
         7   6   5
         */
 
+        if (direction < 0 || direction > 8 || speed < 1)
+            throw new IllegalArgumentException("Illegal direction or speed values whilst trying to move Blob.");
+
         for (int i = 0; i < speed; i++) {
             switch (direction) {
                 case 0:
@@ -92,7 +98,71 @@ public class Blob extends Animal {
 
             modEnergy(Math.round(-agro / 30));
         }
+
         correctPos();
+        if (foodX == null) prefDir = direction;
+        else prefDir = 0;
+        tempDir = direction;
+    }
+
+    /**
+     * The Blob will move randomly with maximum speed if it has not found any food nearby.
+     * If its exclusion key is greater than 0, movement is restricted per the exclusion procedure.
+     * The Blob will generally prefer to walk to the same direction it was walking before.
+     * Else if it has spotted a food source, it will move with appropriate speed to that food source.
+     */
+    public void decideMovement() {
+        int exKey = getExKey();
+        int freeDir = -1;
+        int exDir = -1;
+
+        setReverseDirectionKey();
+
+        if (exKey == 0) {
+            do {
+                freeDir = rng.nextInt(25);
+            } while (freeDir == reverseDir);
+        } else {
+            do {
+                exDir = getValidDirKey(exKey);
+            } while (exDir == reverseDir);
+        }
+
+        if (foodX != null) {
+            moveBlob(dirFood, adjustedSpeed);
+        }
+        else if (exKey == 0 && prefDir == 0) {
+            moveBlob(freeMovement[freeDir], speed);
+        }
+        else if (exKey == 0 && prefDir > 0) {
+            if (calcProb(dirProb)) moveBlob(prefDir, speed);
+            else moveBlob(freeMovement[freeDir], speed);
+        }
+        else if (exKey > 0 && prefDir == 0) {
+            moveBlob(exDir, speed);
+        }
+        else if (exKey > 0 && prefDir > 0) {
+            boolean prefDirAvailable = false;
+            int[] dirCheck = getValidDirArray(exKey);
+
+            for (int j : dirCheck) {
+                if (j == prefDir) {
+                    prefDirAvailable = true;
+                    break;
+                }
+            }
+
+            if (prefDirAvailable && calcProb(dirProb)) moveBlob(prefDir, speed);
+            else moveBlob(exDir, speed);
+        }
+        setReverseDirectionKey();
+    }
+
+    public void setReverseDirectionKey() {
+        if (prefDir != 0 && prefDir <= 4) reverseDir = prefDir + 4;
+        else if (prefDir != 0) reverseDir = prefDir - 4;
+        else if (tempDir <= 4) reverseDir = tempDir + 4;
+        else reverseDir = tempDir - 4;
     }
 
     /**
@@ -348,5 +418,47 @@ public class Blob extends Animal {
         if (posX == 0 && posY < dimY && posY > 0)       return 8;
 
         throw new IndexOutOfBoundsException("Blob: Exclusion key is out of range.");
+    }
+
+    public void decideUponDeath() {
+        if (energy <= 0) {
+            blobHash.remove(id);
+            blobAmount--;
+            blobDeaths++;
+        } else if (energy > 100) setEnergy(100);
+    }
+
+    public void tryReproduction() {
+        if (blobAmount < maxBlobs && (day - reproductionDate) >= 5 && willReproduce()) {
+            Environment.id++;
+            blobHash.put(Environment.id, new Blob(
+                    Environment.id,
+                    (int) (energy - (energy * 0.4)),
+                    speed + getValidSpeedMutation(this),
+                    sense + getValidSenseMutation(this),
+                    size + getValidSizeMutation(),
+                    agro + getValidAgroMutation()));
+            blobBirths++;
+            setReproductionDate(day);
+        }
+    }
+
+    public void dailyRoutine() {
+        logBlob(this);
+
+        eatBlob();
+        if (foodX != null || senseFood()) {
+            calcDirectionKey();
+            decideMovement();
+            if (calcDirectionKey() == 0) {
+                eatFood();
+                foodX = null;
+                foodY = null;
+            }
+        } else {
+            decideMovement();
+        }
+        if(size > 33) modEnergy((int) Math.round(-0.03 * size));
+        else modEnergy(-1);
     }
 }

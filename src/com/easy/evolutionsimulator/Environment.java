@@ -3,7 +3,7 @@ package com.easy.evolutionsimulator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.easy.evolutionsimulator.Calc.*;
+import static com.easy.evolutionsimulator.Calc.rng;
 import static com.easy.evolutionsimulator.Log.*;
 
 public class Environment {
@@ -12,6 +12,7 @@ public class Environment {
     static int dimX, dimY;
     static int envSize;
     static Integer id, fid;
+    static int maxBlobs;
 
     static class Food {
         int satiety, posX, posY;
@@ -60,7 +61,9 @@ public class Environment {
         }
     }
 
-    public Environment(int pDimX, int pDimY) {
+    public Environment(int pDimX, int pDimY, int maxBlobs) {
+        if (maxBlobs == 0) Environment.maxBlobs = Integer.MAX_VALUE;
+        else Environment.maxBlobs = maxBlobs;
         dimX = pDimX - 1;
         dimY = pDimY - 1;
         envSize = pDimX * pDimY;
@@ -145,37 +148,6 @@ public class Environment {
     }
 
     /**
-     * Moves a single Blob entity.
-     * The Blob will move randomly with maximum speed if it has not found any food nearby.
-     * If its exclusion key is greater than 0, movement is restricted per the exclusion procedure.
-     * Else if it has spotted a food source, it will move with appropriate speed to that food source.
-     * @param blob The Blob entity to be moved
-     */
-    public void moveBlob(Blob blob) {
-        int exKey = blob.getExKey();
-
-        if (blob.foodX == null && exKey == 0) {
-            blob.moveBlob(rng.nextInt(9), blob.speed);
-        } else if (blob.foodX == null && exKey > 0) {
-            blob.moveBlob(getValidDirKey(exKey), blob.speed);
-        } else {
-            blob.moveBlob(blob.dirFood, blob.adjustedSpeed);
-        }
-    }
-
-    /**
-     * Repositions all Blobs to random positions in the environment.
-     */
-    public void repositionBlobs() {
-        Blob blob;
-
-        for (Map.Entry<Integer, Blob> blobEntity : blobHash.entrySet()) {
-            blob = blobEntity.getValue();
-            blob.setPosition(rng.nextInt(dimX + 1), rng.nextInt(dimY + 1));
-        }
-    }
-
-    /**
      * Starts a new day the Blobs must survive.
      * @param moveCount Amount of moves a Blob will do
      * @param foodCount Amount of food entities in the environment in total
@@ -183,63 +155,26 @@ public class Environment {
      */
     public void startDay(int moveCount, int foodCount, int foodSatiety) {
         day++;
-        Blob blob;
         fillFood(foodCount, foodSatiety);
 
         for (int i = 0; i < moveCount; i++) {
             for (Map.Entry<Integer, Blob> blobEntity : blobHash.entrySet()) {
-                blob = blobEntity.getValue();
-                logBlob(blob);
-
-                blob.eatBlob();
-                if (blob.foodX != null || blob.senseFood()) {
-                    blob.calcDirectionKey();
-                    moveBlob(blob);
-                    if (blob.calcDirectionKey() == 0) {
-                        blob.eatFood();
-                        blob.foodX = null;
-                        blob.foodY = null;
-                    }
-                } else {
-                    moveBlob(blob);
-                }
-                if(blob.size > 33) blob.modEnergy((int) Math.round(-0.03 * blob.size));
-                else blob.modEnergy(-1);
+                blobEntity.getValue().dailyRoutine();
             }
         }
     }
 
     /**
      * Ends the day. Decides whether a Blob will reproduce or die.
-     * @param maxBlobs Maximum amount of Blobs that will be allowed. 0 to disable.
      */
-    public void endDay(int maxBlobs) {
-        if (maxBlobs == 0) maxBlobs = Integer.MAX_VALUE;
+    public void endDay() {
         Blob blob;
 
         for (Map.Entry<Integer, Blob> blobEntity : blobHash.entrySet()) {
             blob = blobEntity.getValue();
             blob.modAge(1);
-
-            if (blob.energy <= 0) {
-                blobHash.remove(blobEntity.getKey());
-                blobAmount--;
-                blobDeaths++;
-                continue;
-            } else if (blob.energy > 100) blob.energy = 100;
-
-            if(blobAmount < maxBlobs && (day - blob.reproductionDate) >= 5 && blob.willReproduce()) {
-                id++;
-                blobHash.put(id, new Blob(
-                        id,
-                        (int) (blob.energy - (blob.energy * 0.4)),
-                        blob.speed + getValidSpeedMutation(blob),
-                        blob.sense + getValidSenseMutation(blob),
-                        blob.size + getValidSizeMutation(),
-                        blob.agro + getValidAgroMutation()));
-                blobBirths++;
-                blob.setReproductionDate(day);
-            }
+            blob.decideUponDeath();
+            blob.tryReproduction();
         }
     }
 }
