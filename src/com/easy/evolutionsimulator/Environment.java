@@ -173,7 +173,7 @@ public class Environment {
         for (Map.Entry<Integer, Blob> blobEntity : blobHash.entrySet()) {
             blob = blobEntity.getValue();
             blob.modAge(1);
-            blob.decideUponDeath();
+            blob.determineDeath();
             blob.tryReproduction();
         }
     }

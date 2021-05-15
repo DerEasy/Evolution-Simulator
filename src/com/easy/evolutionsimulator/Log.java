@@ -51,16 +51,16 @@ public class Log {
 
     public void logBlob(Blob blob) {
         if (blob.foodX != null)
-            System.out.printf("ID(%s) (%s|%s)\tEnergy(%s)\tAge(%s) \tSize(%s)\tAgro(%s)\tSense(%s)\tSpeed(%s)\tDirProb(%s)\tPrefDir(%s)\tFood eaten(%s)\tFood(%s|%s)\n",
+            System.out.printf("ID(%s) (%s|%s)  Energy(%s)  Age(%s)  Size(%s)  Agro(%s)  Sense(%s)  Speed(%s)  Orig./DirProb(%s/%s)  PrefDir(%s)  Food(%s|%s)  eaten(%s)\n",
                 idFmt.format(blob.id), xFmt.format(blob.posX), yFmt.format(blob.posY), doubleFmt.format(blob.energy),
                 tripleFmt.format(blob.age), tripleFmt.format(blob.size), tripleFmt.format(blob.agro), doubleFmt.format(blob.sense),
-                doubleFmt.format(blob.speed), tripleFmt.format(blob.dirProb), blob.prefDir, tripleFmt.format(blob.eatCount),
-                xFmt.format(blob.foodX), yFmt.format(blob.foodY));
+                doubleFmt.format(blob.speed), tripleFmt.format(blob.originalDirProb), tripleFmt.format(blob.dirProb), blob.prefDir,
+                xFmt.format(blob.foodX), yFmt.format(blob.foodY), tripleFmt.format(blob.eatCount));
         else
-            System.out.printf("ID(%s) (%s|%s)\tEnergy(%s)\tAge(%s) \tSize(%s)\tAgro(%s)\tSense(%s)\tSpeed(%s)\tDirProb(%s)\tPrefDir(%s)\tFood eaten(%s)\tFood(N/A)\n",
-                    idFmt.format(blob.id), xFmt.format(blob.posX), yFmt.format(blob.posY), doubleFmt.format(blob.energy),
-                    tripleFmt.format(blob.age), tripleFmt.format(blob.size), tripleFmt.format(blob.agro), doubleFmt.format(blob.sense),
-                    doubleFmt.format(blob.speed), tripleFmt.format(blob.dirProb), blob.prefDir, tripleFmt.format(blob.eatCount));
+            System.out.printf("ID(%s) (%s|%s)  Energy(%s)  Age(%s)  Size(%s)  Agro(%s)  Sense(%s)  Speed(%s)  Orig./DirProb(%s/%s)  PrefDir(%s)  Food(N/A)  eaten(%s)\n",
+                idFmt.format(blob.id), xFmt.format(blob.posX), yFmt.format(blob.posY), doubleFmt.format(blob.energy),
+                tripleFmt.format(blob.age), tripleFmt.format(blob.size), tripleFmt.format(blob.agro), doubleFmt.format(blob.sense),
+                doubleFmt.format(blob.speed), tripleFmt.format(blob.originalDirProb), tripleFmt.format(blob.dirProb), blob.prefDir, tripleFmt.format(blob.eatCount));
     }
 
     /**

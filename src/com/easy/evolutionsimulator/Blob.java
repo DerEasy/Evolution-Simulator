@@ -9,14 +9,13 @@ import static com.easy.evolutionsimulator.Calc.*;
 import static com.easy.evolutionsimulator.Main.printEnvEnabled;
 
 public class Blob extends Animal {
-    public int dirFood, adjustedSpeed;
-    public Integer foodX, foodY;
     public static ConcurrentLinkedQueue<Integer> removeFoodQueue = new ConcurrentLinkedQueue<>();
     public static int foodQueueSize;
-    public int prefDir = 0;
-    public int reverseDir, tempDir;
-    public ConcurrentLinkedQueue<Integer> recentMoves = new ConcurrentLinkedQueue<>();
-    public int repetition;
+    public Integer foodX, foodY;
+    public int dirFood, adjustedSpeed;
+    public int prefDir = 0, reverseDir, tempDir;
+    public int originalDirProb;
+    public boolean panicmode;
 
 
     public Blob(int id, int energy, int speed, int sense, int size, int agro, int dirProb) {
@@ -28,6 +27,7 @@ public class Blob extends Animal {
         setAgro(agro);
         setDirProb(dirProb);
         setPosition(rng.nextInt(dimX + 1), rng.nextInt(dimY + 1));
+        originalDirProb = dirProb;
         blobAmount++;
     }
 
@@ -41,6 +41,7 @@ public class Blob extends Animal {
         setDirProb(dirProb);
         setPosX(x);
         setPosY(y);
+        originalDirProb = dirProb;
         blobAmount++;
     }
 
@@ -107,40 +108,6 @@ public class Blob extends Animal {
         if (foodX == null) prefDir = direction;
         else prefDir = 0;
         tempDir = direction;
-        addPreviousMove(direction);
-    }
-
-    public void addPreviousMove(Integer direction) {
-        if (recentMoves.size() == 6)  mutateDirProb();
-        recentMoves.add(eatCount);
-        recentMoves.add(direction);
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    public void mutateDirProb() {
-        int firstD, secondD, thirdD, firstE, secondE, thirdE, check = 1;
-        firstD = recentMoves.poll();
-        firstE = recentMoves.poll();
-        secondD = recentMoves.poll();
-        secondE = recentMoves.poll();
-        thirdD = recentMoves.poll();
-        thirdE = recentMoves.poll();
-
-        if (firstD == secondD && firstE > secondE) check++;
-        if (secondD == thirdD && secondE > thirdE) check++;
-
-        if (check == 3) {
-            modDirProb(5);
-            repetition = 0;
-        } else if (check == 2) {
-            modDirProb(2);
-            repetition = 0;
-        } else repetition++;
-
-        if (repetition == 3) {
-            modDirProb(-5);
-            repetition = 0;
-        }
     }
 
     /**
@@ -457,7 +424,7 @@ public class Blob extends Animal {
         throw new IndexOutOfBoundsException("Blob: Exclusion key is out of range.");
     }
 
-    public void decideUponDeath() {
+    public void determineDeath() {
         if (energy <= 0) {
             blobHash.remove(id);
             blobAmount--;
@@ -475,9 +442,20 @@ public class Blob extends Animal {
                     sense + getSenseMutation(this),
                     size + getSizeMutation(),
                     agro + getAgroMutation(),
-                    dirProb + getDirProbMutation()));
+                    originalDirProb + getDirProbMutation()));
             blobBirths++;
             setReproductionDate(day);
+        }
+    }
+
+    public void determinePanicLinearity() {
+        if (!panicmode) originalDirProb = dirProb;
+        if (!panicmode && foodX == null && (day - lastFoodDay) >= 3 && energy <= 35) {
+            panicmode = true;
+            setDirProb(Math.round(((0.02 * Math.pow((dirProb - 100), 2) + 10) / 100) * dirProb + dirProb));
+        } else if (foodX != null) {
+            panicmode = false;
+            setDirProb(originalDirProb);
         }
     }
 
@@ -486,16 +464,20 @@ public class Blob extends Animal {
 
         eatBlob();
         if (foodX != null || senseFood()) {
+            determinePanicLinearity();
             calcDirectionKey();
             decideMovement();
             if (calcDirectionKey() == 0) {
-                if (eatFood()) eatCount++;
+                if (eatFood()) modEatCount(1);
+                setLastFoodDay(day);
                 foodX = null;
                 foodY = null;
             }
         } else {
+            determinePanicLinearity();
             decideMovement();
         }
+
         if(size > 33) modEnergy((int) Math.round(-0.03 * size));
         else modEnergy(-1);
     }

@@ -16,6 +16,7 @@ public abstract class Animal {
     public int reproductionDate;
     public int dirProb;
     public int eatCount;
+    public int lastFoodDay;
 
     public Animal() {
         age = 0;
@@ -43,8 +44,8 @@ public abstract class Animal {
         this.posY = posY;
     }
 
-    public void setDirProb(int dirProb) {
-        this.dirProb = dirProb;
+    public void setDirProb(long dirProb) {
+        this.dirProb = (int) dirProb;
         if (this.dirProb > 100) setDirProb(100);
         else if (this.dirProb < 0) setDirProb(0);
     }
@@ -53,6 +54,10 @@ public abstract class Animal {
         this.agro = agro;
         if (this.agro > 100) setAgro(100);
         else if (this.agro < 0) setAgro(0);
+    }
+
+    public void setLastFoodDay(int lastFoodDay) {
+        this.lastFoodDay = lastFoodDay;
     }
 
     public void setEnergy(Integer energy) {
@@ -118,6 +123,10 @@ public abstract class Animal {
     public void modEnergy(Integer energy) {
         this.energy += energy;
         if (this.energy > 100) setEnergy(100);
+    }
+
+    public void modEatCount(int eatCount) {
+        this.eatCount += eatCount;
     }
 
     public void modSense(Integer sense) {

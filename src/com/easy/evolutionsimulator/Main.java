@@ -47,10 +47,10 @@ public class Main {
 
         } else if (demomode == 2){
             envLogic = new Environment(6,6, 1);
-            envLogic.spawnBlobs(1,1,1,30,0, 50,true);
+            envLogic.spawnBlobs(1,2,1,30,0, 50,true);
             hasBlob = new boolean[Environment.dimX + 1][Environment.dimY + 1];
             hasFood = new boolean[Environment.dimX + 1][Environment.dimY + 1];
-            startSimulation(0,0,0,800,true,1,3, 15);
+            startSimulation(0,0,0,800,true,1,1, 15);
 
         } else if (demomode == 0) {
             System.out.println("Set the size of the x dimension of the environment:");

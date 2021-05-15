@@ -1,9 +1,9 @@
 package com.easy.evolutionsimulator;
 
-import java.security.SecureRandom;
+import java.util.Random;
 
 public class Calc {
-    public static SecureRandom rng = new SecureRandom();
+    public static Random rng = new Random();
 
     //Defines the valid mutation shifts
     //To control the chances of a specific mutation occurring more often, some values are duplicates.
