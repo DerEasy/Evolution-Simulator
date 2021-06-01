@@ -674,7 +674,9 @@ public class Blob extends Animal {
     }
 
     private void sizeEnergyLoss() {
-        if(size > 33) modEnergy((int) Math.round(-0.03 * size));
-        else modEnergy(-1);
+        if (size > 33)
+            modEnergy((int) Math.round(-0.03 * size));
+        else
+            modEnergy(-1);
     }
 }
