@@ -1,40 +1,42 @@
 package com.easy.evolutionsimulator;
 
-import java.lang.ref.WeakReference;
 import java.text.DecimalFormat;
 import java.util.Map;
 
-import static com.easy.evolutionsimulator.Blob.foodQueueSize;
-import static com.easy.evolutionsimulator.Blob.removeFoodQueue;
-import static com.easy.evolutionsimulator.Environment.*;
-import static com.easy.evolutionsimulator.Main.*;
+import static com.easy.evolutionsimulator.S.*;
 
 public class Log {
-    public static WeakReference<Log> logRef;
-    public static int foodEaten, blobDeaths, blobBirths, blobsEaten, blobsDefeated, blobAmount, foodAmount, day;
+    private final Main main;
+    private final Environment env;
     private final DecimalFormat idFmt, timeFmt, xFmt, yFmt, doubleFmt, tripleFmt;
 
-    public Log() {
-        logRef = new WeakReference<>(this);
+    public int foodEaten, blobDeaths, blobBirths, blobsEaten, blobsDefeated, blobAmount, foodAmount, day;
+    public boolean[][] hasBlob, hasFood;
+
+    public Log(Main main, Environment env) {
+        this.main = main;
+        this.env = env;
+
         idFmt = new DecimalFormat("000000");
         timeFmt = new DecimalFormat("0.000");
         doubleFmt = new DecimalFormat("00");
         tripleFmt = new DecimalFormat("000");
 
-        if (dimX < 10)
+        if (env.dimX < 10)
             xFmt = new DecimalFormat("0");
-        else if (dimX < 100)
+        else if (env.dimX < 100)
             xFmt = new DecimalFormat("00");
-        else if (dimX < 1000)
+        else if (env.dimX < 1000)
             xFmt = new DecimalFormat("000");
         else
             xFmt = new DecimalFormat("0000");
 
-        if (dimY < 10)
+
+        if (env.dimY < 10)
             yFmt = new DecimalFormat("0");
-        else if (dimY < 100)
+        else if (env.dimY < 100)
             yFmt = new DecimalFormat("00");
-        else if (dimY < 1000)
+        else if (env.dimY < 1000)
             yFmt = new DecimalFormat("000");
         else
             yFmt = new DecimalFormat("0000");
@@ -42,7 +44,7 @@ public class Log {
 
     public void logEnv() {
         System.out.printf("\n\n\nEnvDimensions: %s x %s\tEnvSize: %s\tTime elapsed: %ss\n",
-                dimX + 1, dimY + 1, envSize, timeFmt.format(timeElapsed));
+                env.dimX + 1, env.dimY + 1, env.envSize, timeFmt.format(main.timeElapsed));
         System.out.printf("Food count: %s\tFood eaten: %s\tBlobs eaten: %s\tBlobs defeated: %s\tDay %s\n",
                 foodAmount, foodEaten, blobsDefeated, blobsEaten, day);
         System.out.printf("Blob count: %s\tBlob deaths: %s\tBlob births: %s\n",
@@ -51,16 +53,37 @@ public class Log {
 
     public void logBlob(Blob blob) {
         if (blob.foodX != null)
-            System.out.printf("ID(%s) (%s|%s)  Energy(%s)  Age(%s)  Size(%s)  Agro(%s)  Sense(%s)  Speed(%s)  Orig./DirProb(%s/%s)  PrefDir(%s)  Food(%s|%s)  eaten(%s)\n",
-                idFmt.format(blob.id), xFmt.format(blob.posX), yFmt.format(blob.posY), doubleFmt.format(blob.energy),
-                tripleFmt.format(blob.age), tripleFmt.format(blob.size), tripleFmt.format(blob.agro), doubleFmt.format(blob.sense),
-                doubleFmt.format(blob.speed), tripleFmt.format(blob.originalDirProb), tripleFmt.format(blob.dirProb), blob.prefDir,
-                xFmt.format(blob.foodX), yFmt.format(blob.foodY), tripleFmt.format(blob.eatCount));
+            System.out.printf(LOGBLOB,
+                idFmt.format(blob.id),
+                    xFmt.format(blob.posX),
+                    yFmt.format(blob.posY),
+                    doubleFmt.format(blob.energy),
+                    tripleFmt.format(blob.age),
+                    tripleFmt.format(blob.size),
+                    tripleFmt.format(blob.agro),
+                    doubleFmt.format(blob.sense),
+                    doubleFmt.format(blob.speed),
+                    tripleFmt.format(blob.defaultDirProb),
+                    tripleFmt.format(blob.dirProb),
+                    blob.prefDir,
+                    xFmt.format(blob.foodX),
+                    yFmt.format(blob.foodY),
+                    tripleFmt.format(blob.eatCount));
         else
-            System.out.printf("ID(%s) (%s|%s)  Energy(%s)  Age(%s)  Size(%s)  Agro(%s)  Sense(%s)  Speed(%s)  Orig./DirProb(%s/%s)  PrefDir(%s)  Food(N/A)  eaten(%s)\n",
-                idFmt.format(blob.id), xFmt.format(blob.posX), yFmt.format(blob.posY), doubleFmt.format(blob.energy),
-                tripleFmt.format(blob.age), tripleFmt.format(blob.size), tripleFmt.format(blob.agro), doubleFmt.format(blob.sense),
-                doubleFmt.format(blob.speed), tripleFmt.format(blob.originalDirProb), tripleFmt.format(blob.dirProb), blob.prefDir, tripleFmt.format(blob.eatCount));
+            System.out.printf(LOGBLOB_NA,
+                idFmt.format(blob.id),
+                    xFmt.format(blob.posX),
+                    yFmt.format(blob.posY),
+                    doubleFmt.format(blob.energy),
+                    tripleFmt.format(blob.age),
+                    tripleFmt.format(blob.size),
+                    tripleFmt.format(blob.agro),
+                    doubleFmt.format(blob.sense),
+                    doubleFmt.format(blob.speed),
+                    tripleFmt.format(blob.defaultDirProb),
+                    tripleFmt.format(blob.dirProb),
+                    blob.prefDir,
+                    tripleFmt.format(blob.eatCount));
     }
 
     /**
@@ -69,16 +92,16 @@ public class Log {
      */
     public void printEnv() {
         Blob blob;
-        Food food;
+        Environment.Food food;
 
-        for (int y = dimY; y >= 0; y--) {
-            for (int x = 0; x <= dimX; x++) {
-                for (Map.Entry<Integer, Blob> blobEntity : blobHash.entrySet()) {
+        for (int y = env.dimY; y >= 0; y--) {
+            for (int x = 0; x <= env.dimX; x++) {
+                for (Map.Entry<Integer, Blob> blobEntity : env.blobHash.entrySet()) {
                     blob = blobEntity.getValue();
                     hasBlob[x][y] = blob.posX == x && blob.posY == y;
                     if (hasBlob[x][y]) break;
                 }
-                for (Map.Entry<Integer, Food> foodEntity : foodHash.entrySet()) {
+                for (Map.Entry<Integer, Environment.Food> foodEntity : env.foodHash.entrySet()) {
                     food = foodEntity.getValue();
                     hasFood[x][y] = food.posX == x && food.posY == y;
                     if (hasFood[x][y]) break;
@@ -86,9 +109,9 @@ public class Log {
             }
         }
 
-        for (int y = dimY; y >= 0; y--) {
+        for (int y = env.dimY; y >= 0; y--) {
             System.out.print(y + "\t\t");
-            for (int x = 0; x <= dimX; x++) {
+            for (int x = 0; x <= env.dimX; x++) {
                 if (hasBlob[x][y] && !hasFood[x][y]) {
                     System.out.print("|o");
                 } else if (hasBlob[x][y] && hasFood[x][y]) {
@@ -102,9 +125,9 @@ public class Log {
             System.out.println("|");
         }
 
-        if (printEnvEnabled) {
-            for (int i = 0; i < foodQueueSize; i++) foodHash.remove(removeFoodQueue.poll());
-            foodQueueSize = 0;
+        if (main.printEnvEnabled) {
+            for (int i = 0; i < env.foodQueueSize; i++) env.foodHash.remove(env.removeFoodQueue.poll());
+            env.foodQueueSize = 0;
         }
     }
 }

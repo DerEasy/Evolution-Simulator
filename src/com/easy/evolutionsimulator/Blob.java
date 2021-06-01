@@ -1,24 +1,26 @@
 package com.easy.evolutionsimulator;
 
+import java.util.ArrayList;
 import java.util.Map;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
-import static com.easy.evolutionsimulator.Environment.*;
-import static com.easy.evolutionsimulator.Log.*;
 import static com.easy.evolutionsimulator.Calc.*;
-import static com.easy.evolutionsimulator.Main.printEnvEnabled;
 
+@SuppressWarnings("UnusedReturnValue")
 public class Blob extends Animal {
-    public static ConcurrentLinkedQueue<Integer> removeFoodQueue = new ConcurrentLinkedQueue<>();
-    public static int foodQueueSize;
+    private final Main main;
+    private final Environment env;
+    private final Log log;
+
     public Integer foodX, foodY;
-    public int dirFood, adjustedSpeed;
-    public int prefDir = 0, reverseDir, tempDir;
-    public int originalDirProb;
-    public boolean panicmode;
+    public int prefDir, lastDir, defaultDirProb;
+    private int dirFood, adjustedSpeed;
+    private boolean panicmode;
 
-
-    public Blob(int id, int energy, int speed, int sense, int size, int agro, int dirProb) {
+    public Blob(Main main, Environment env, Log log, int id, int energy, int speed, int sense, int size, int agro, int dirProb) {
+        super(env);
+        this.main = main;
+        this.env = env;
+        this.log = log;
         setId(id);
         setSpeed(speed);
         setSense(sense);
@@ -26,12 +28,16 @@ public class Blob extends Animal {
         setEnergy(energy);
         setAgro(agro);
         setDirProb(dirProb);
-        setPosition(rng.nextInt(dimX + 1), rng.nextInt(dimY + 1));
-        originalDirProb = dirProb;
-        blobAmount++;
+        setPosition(rng.nextInt(env.dimX + 1), rng.nextInt(env.dimY + 1));
+        defaultDirProb = dirProb;
+        log.blobAmount++;
     }
 
-    public Blob(int id, int energy, int speed, int sense, int size, int agro, int dirProb, int x, int y) {
+    public Blob(Main main, Environment env, Log log, int id, int energy, int speed, int sense, int size, int agro, int dirProb, int x, int y) {
+        super(env);
+        this.main = main;
+        this.env = env;
+        this.log = log;
         setId(id);
         setSpeed(speed);
         setSense(sense);
@@ -41,8 +47,8 @@ public class Blob extends Animal {
         setDirProb(dirProb);
         setPosX(x);
         setPosY(y);
-        originalDirProb = dirProb;
-        blobAmount++;
+        defaultDirProb = dirProb;
+        log.blobAmount++;
     }
 
 
@@ -56,15 +62,12 @@ public class Blob extends Animal {
      * @param direction Direction key from 0 to 8 (inclusive)
      * @param speed Default or adjusted speed of the Blob
      */
-    public void moveBlob(int direction, int speed) {
+    private void moveBlob(int direction, int speed) {
         /*
         1   2   3
         8   0   4
         7   6   5
         */
-
-        if (direction < 0 || direction > 8 || speed < 1)
-            throw new IllegalArgumentException("Illegal direction or speed values whilst trying to move Blob.");
 
         for (int i = 0; i < speed; i++) {
             switch (direction) {
@@ -94,20 +97,27 @@ public class Blob extends Animal {
                 case 8:
                     posX--;
                     break;
+                default:
+                    throw new IllegalArgumentException("Illegal direction value whilst trying to move Blob.");
             }
         }
+        correctPos();
+        movementEnergyLoss(direction, speed);
+        directionLogging(direction);
+    }
 
-        if (direction != 0) {
+    private void movementEnergyLoss(int direction, int speed) {
+        if (direction != 0 && !(speed < 1)) {
             if (size < 25) modEnergy(-3);
             else modEnergy((int) Math.round(-0.12 * size));
-
-            modEnergy(Math.round(-agro / 30));
+            modEnergy(Math.round(-agro / 30f));
         }
+    }
 
-        correctPos();
+    private void directionLogging(int direction) {
+        lastDir = direction;
         if (foodX == null) prefDir = direction;
         else prefDir = 0;
-        tempDir = direction;
     }
 
     /**
@@ -116,12 +126,11 @@ public class Blob extends Animal {
      * The Blob will generally prefer to walk to the same direction it was walking before.
      * Else if it has spotted a food source, it will move with appropriate speed to that food source.
      */
-    public void decideMovement() {
+    private void decideMovement() {
         int exKey = getExKey();
         int freeDir = -1;
         int exDir = -1;
-
-        setReverseDirectionKey();
+        int reverseDir = setReverseDirectionKey();
 
         if (exKey == 0) {
             do {
@@ -157,17 +166,26 @@ public class Blob extends Animal {
                 }
             }
 
-            if (prefDirAvailable && calcProb(dirProb)) moveBlob(prefDir, speed);
-            else moveBlob(exDir, speed);
+            if (prefDirAvailable && calcProb(dirProb))
+                moveBlob(prefDir, speed);
+            else
+                moveBlob(exDir, speed);
         }
-        setReverseDirectionKey();
     }
 
-    public void setReverseDirectionKey() {
-        if (prefDir != 0 && prefDir <= 4) reverseDir = prefDir + 4;
-        else if (prefDir != 0) reverseDir = prefDir - 4;
-        else if (tempDir <= 4) reverseDir = tempDir + 4;
-        else reverseDir = tempDir - 4;
+    private int setReverseDirectionKey() {
+        int reverseDir;
+
+        if (prefDir != 0 && prefDir <= 4)
+            reverseDir = prefDir + 4;
+        else if (prefDir != 0)
+            reverseDir = prefDir - 4;
+        else if (lastDir <= 4)
+            reverseDir = lastDir + 4;
+        else
+            reverseDir = lastDir - 4;
+
+        return reverseDir;
     }
 
     /**
@@ -176,12 +194,12 @@ public class Blob extends Animal {
      * choose the nearest food source possible.
      * @return True if nearby food has been located.
      */
-    public boolean senseFood() {
+    private boolean senseFood() {
         int foodX, foodY;
         int fillIndex = -1;
-        Food[] availableFood = new Food[10];
+        Environment.Food[] availableFood = new Environment.Food[10];
 
-        for (Map.Entry<Integer, Food> foodEntity : foodHash.entrySet()) {
+        for (Map.Entry<Integer, Environment.Food> foodEntity : env.foodHash.entrySet()) {
             foodX = foodEntity.getValue().posX;
             foodY = foodEntity.getValue().posY;
 
@@ -228,11 +246,11 @@ public class Blob extends Animal {
      * If Blob is on a block with food on it, the method returns true.
      * @return True if food has been eaten
      */
-    public boolean eatFood() {
+    private boolean eatFood() {
         boolean ateFood = false;
         if (foodX == null || foodY == null) return false;
 
-        for (Map.Entry<Integer, Food> foodEntity : foodHash.entrySet()) {
+        for (Map.Entry<Integer, Environment.Food> foodEntity : env.foodHash.entrySet()) {
             if (foodEntity.getValue().available &&
                     foodEntity.getValue().posX == foodX &&
                     foodEntity.getValue().posY == foodY &&
@@ -240,15 +258,15 @@ public class Blob extends Animal {
                     posY == foodY) {
                 
                 modEnergy(foodEntity.getValue().satiety);
-                foodAmount--;
-                foodEaten++;
+                log.foodAmount--;
+                log.foodEaten++;
                 ateFood = true;
 
-                if (printEnvEnabled) {
-                    removeFoodQueue.add(foodEntity.getKey());
-                    foodQueueSize++;
+                if (main.printEnvEnabled) {
+                    env.removeFoodQueue.add(foodEntity.getKey());
+                    env.foodQueueSize++;
                     foodEntity.getValue().available = false;
-                } else foodHash.remove(foodEntity.getKey());
+                } else env.foodHash.remove(foodEntity.getKey());
 
                 if (energy >= 100) {
                     setEnergy(100);
@@ -265,12 +283,12 @@ public class Blob extends Animal {
      * it's 20% bigger than it. A Blob can eat 1 other Blob at most in one go.
      * @return True if a Blob has been eaten
      */
-    public boolean eatBlob() {
+    private boolean eatBlob() {
         if (size < 8) return false;
         Blob blob;
         int blobsEaten = 0;
 
-        for (Map.Entry<Integer, Blob> blobEntity : blobHash.entrySet()) {
+        for (Map.Entry<Integer, Blob> blobEntity : env.blobHash.entrySet()) {
             blob = blobEntity.getValue();
 
             if (energy >= 100 && blobsEaten > 0) return true;
@@ -286,16 +304,16 @@ public class Blob extends Animal {
                 if (calcProb((eatProb + minSizeDiff))) {
                     modEnergy((blob.size / 8));
                     modSize(1);
-                    blobHash.remove(blobEntity.getKey());
-                    blobDeaths++;
+                    env.blobHash.remove(blobEntity.getKey());
+                    log.blobDeaths++;
                     blobsEaten++;
-                    blobAmount--;
-                    Log.blobsEaten++;
+                    log.blobAmount--;
+                    log.blobsEaten++;
                 } else {
                     modEnergy(-(blob.size / 6));
                     blob.modEnergy(-minSizeDiff);
                     if (rng.nextBoolean()) blob.modAgro(1);
-                    blobsDefeated++;
+                    log.blobsDefeated++;
                 }
             }
         }
@@ -303,7 +321,102 @@ public class Blob extends Animal {
         return blobsEaten > 0;
     }
 
-    public void growOrShrink() {
+    @SuppressWarnings("InnerClassMayBeStatic")
+    private class FleeStatus {
+        boolean unsafe, noSafeDir;
+        int[] safeDir;
+
+        FleeStatus(boolean unsafe, boolean noSafeDir) {
+            this.unsafe = unsafe;
+            this.noSafeDir = noSafeDir;
+        }
+
+        public void setSafeArray(int[] safeDir) {
+            this.safeDir = safeDir;
+        }
+    }
+
+    private FleeStatus determineFleeStatus() {
+        Blob b;
+        ArrayList<Integer> safeDir = new ArrayList<>(8);
+        for (int i = 1; i <= 8; i++)
+            safeDir.add(i);
+
+        for (Map.Entry<Integer, Blob> blobEntity : env.blobHash.entrySet()) {
+            b = blobEntity.getValue();
+            if (b == this) continue;
+
+            if (b.posX - sense <= posX && b.posX + sense >= posX &&
+                    b.posY - sense <= posY && b.posY + sense >= posY &&
+                    size <= b.size + (b.size * 0.2) &&
+                    agro <= b.agro - (b.agro * 0.1) &&
+                    b.sense >= sense && b.speed >= speed) {
+
+                safeDir = updateSafeDirArray(safeDir, getForeignerDir(b));
+            }
+        }
+
+        FleeStatus f = new FleeStatus(safeDir.size() < 8, safeDir.size() == 0);
+        if (!f.noSafeDir) {
+            f.setSafeArray(safeDir.stream().mapToInt((Integer::valueOf)).toArray());
+        }
+        return f;
+    }
+
+    private ArrayList<Integer> updateSafeDirArray(ArrayList<Integer> safeDir, int prKey) {
+        switch (prKey) {
+            case 1:
+                for (int i = 0; i < 3; i++)
+                    safeDir.remove((Integer) prTopLeft[i]);
+                break;
+            case 2:
+                for (int i = 0; i < 3; i++)
+                    safeDir.remove((Integer) prTop[i]);
+                break;
+            case 3:
+                for (int i = 0; i < 3; i++)
+                    safeDir.remove((Integer) prTopRight[i]);
+                break;
+            case 4:
+                for (int i = 0; i < 3; i++)
+                    safeDir.remove((Integer) prRight[i]);
+                break;
+            case 5:
+                for (int i = 0; i < 3; i++)
+                    safeDir.remove((Integer) prBottomRight[i]);
+                break;
+            case 6:
+                for (int i = 0; i < 3; i++)
+                    safeDir.remove((Integer) prBottom[i]);
+                break;
+            case 7:
+                for (int i = 0; i < 3; i++)
+                    safeDir.remove((Integer) prBottomLeft[i]);
+                break;
+            case 8:
+                for (int i = 0; i < 3; i++)
+                    safeDir.remove((Integer) prLeft[i]);
+                break;
+        }
+        return safeDir;
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    private Integer getForeignerDir(Blob b) {
+        if      (b.posX == posX && b.posY == posY)  return 0;
+        else if (b.posX < posX && b.posY > posY)    return 1;
+        else if (b.posX == posX && b.posY > posY)   return 2;
+        else if (b.posX > posX && b.posY > posY)    return 3;
+        else if (b.posX > posX && b.posY == posY)   return 4;
+        else if (b.posX > posX && b.posY < posY)    return 5;
+        else if (b.posX == posX && b.posY < posY)   return 6;
+        else if (b.posX < posX && b.posY < posY)    return 7;
+        else if (b.posX < posX && b.posY == posY)   return 8;
+
+        throw new IndexOutOfBoundsException("Foreigner direction out of range.");
+    }
+
+    private void growOrShrink() {
         if (energy < (size * 0.8)) {
             modSize((int) -(size * 0.1));
         } else if (energy > (size * 0.2)) {
@@ -319,33 +432,33 @@ public class Blob extends Animal {
      * Calculates the direction key of the next food source and sets the adjusted speed accordingly.
      * @return The direction key
      */
-    public int calcDirectionKey() {
+    @SuppressWarnings("ConstantConditions")
+    private int calcDirectionKey() {
         /*
         1   2   3
         8   0   4
         7   6   5
         */
 
-        if (foodX == null || foodY == null) return 0;
+        if (foodX == null || foodY == null)
+            return 0;
 
-        int tempX, tempY;
-        tempX = foodX - posX;
-        tempY = foodY - posY;
+        int diffX, diffY;
+        diffX = foodX - posX;
+        diffY = foodY - posY;
 
-        if      (tempX == 0 && tempY == 0)  dirFood = 0;
-        else if (tempX < 0 && tempY > 0)    dirFood = 1;
-        else if (tempX == 0 && tempY > 0)   dirFood = 2;
-        else if (tempX > 0 && tempY > 0)    dirFood = 3;
-        else if (tempX > 0 && tempY == 0)   dirFood = 4;
-        else if (tempX > 0 && tempY < 0)    dirFood = 5;
-        else if (tempX == 0 && tempY < 0)   dirFood = 6;
-        else if (tempX < 0 && tempY < 0)    dirFood = 7;
-        else if (tempX < 0 && tempY == 0)   dirFood = 8;
+        if      (diffX == 0 && diffY == 0)  dirFood = 0;
+        else if (diffX < 0 && diffY > 0)    dirFood = 1;
+        else if (diffX == 0 && diffY > 0)   dirFood = 2;
+        else if (diffX > 0 && diffY > 0)    dirFood = 3;
+        else if (diffX > 0 && diffY == 0)   dirFood = 4;
+        else if (diffX > 0 && diffY < 0)    dirFood = 5;
+        else if (diffX == 0 && diffY < 0)   dirFood = 6;
+        else if (diffX < 0 && diffY < 0)    dirFood = 7;
+        else if (diffX < 0 && diffY == 0)   dirFood = 8;
 
-        tempX = Math.abs(tempX);
-        tempY = Math.abs(tempY);
-        if (speed == 1) adjustedSpeed = 1;
-        else calcAdjustedSpeed(tempX, tempY);
+        calcAdjustedSpeed(Math.abs(diffX), Math.abs(diffY));
+
         return dirFood;
     }
 
@@ -355,8 +468,10 @@ public class Blob extends Animal {
      * @param tempY The absolute y value determined by calcDirectionKey()
      * @return The adjusted speed
      */
-    public int calcAdjustedSpeed(int tempX, int tempY) {
-        if (tempX >= tempY) {
+    private int calcAdjustedSpeed(int tempX, int tempY) {
+        if (speed == 1) {
+            adjustedSpeed = 1;
+        } else if (tempX >= tempY) {
             if (tempX <= speed && tempX > 0) adjustedSpeed = tempX;
             else adjustedSpeed = speed;
         } else {
@@ -370,13 +485,13 @@ public class Blob extends Animal {
      * Corrects the Blob's position if it wandered outside of environment boundaries.
      * @return True if Blob was outside of boundaries
      */
-    public boolean correctPos() {
+    private boolean correctPos() {
         boolean isOutside = false;
-        if (posX > dimX) {
-            setPosX(dimX);
+        if (posX > env.dimX) {
+            setPosX(env.dimX);
             isOutside = true;
-        } if (posY > dimY) {
-            setPosY(dimY);
+        } if (posY > env.dimY) {
+            setPosY(env.dimY);
             isOutside = true;
         } if (posX < 0) {
             setPosX(0);
@@ -392,7 +507,7 @@ public class Blob extends Animal {
      * Gets the exclusion key.
      * @return Exclusion key from 0 to 8 (inclusive)
      */
-    public int getExKey() {
+    private int getExKey() {
        /*
         1   2   3
         8   0   4
@@ -402,74 +517,87 @@ public class Blob extends Animal {
         correctPos();
 
         //free movement
-        if (posX < dimX && posX > 0 &&
-               posY < dimY && posY > 0)                 return 0;
+        if (posX < env.dimX && posX > 0 &&
+               posY < env.dimY && posY > 0)                 return 0;
         //topLeft
-        if (posX == 0 && posY == dimY)                  return 1;
+        if (posX == 0 && posY == env.dimY)                  return 1;
         //top
-        if (posX < dimX && posX > 0 && posY == dimY)    return 2;
+        if (posX < env.dimX && posX > 0 && posY == env.dimY)    return 2;
         //topRight
-        if (posX == dimX && posY == dimY)               return 3;
+        if (posX == env.dimX && posY == env.dimY)               return 3;
         //right
-        if (posX == dimX && posY < dimY && posY > 0)    return 4;
+        if (posX == env.dimX && posY < env.dimY && posY > 0)    return 4;
         //bottomRight
-        if (posX == dimX && posY == 0)                  return 5;
+        if (posX == env.dimX && posY == 0)                  return 5;
         //bottom
-        if (posX < dimX && posX > 0 && posY == 0)       return 6;
+        if (posX < env.dimX && posX > 0 && posY == 0)       return 6;
         //bottomLeft
         if (posX == 0 && posY == 0)                     return 7;
         //left
-        if (posX == 0 && posY < dimY && posY > 0)       return 8;
+        if (posX == 0 && posY < env.dimY && posY > 0)       return 8;
 
         throw new IndexOutOfBoundsException("Blob: Exclusion key is out of range.");
     }
 
     public void determineDeath() {
         if (energy <= 0) {
-            blobHash.remove(id);
-            blobAmount--;
-            blobDeaths++;
+            env.blobHash.remove(id);
+            log.blobAmount--;
+            log.blobDeaths++;
         } else if (energy > 100) setEnergy(100);
     }
 
     public void tryReproduction() {
-        if (blobAmount < maxBlobs && (day - reproductionDate) >= 5 && willReproduce()) {
-            Environment.id++;
-            blobHash.put(Environment.id, new Blob(
-                    Environment.id,
+        if (log.blobAmount < env.maxBlobs && (log.day - reproductionDate) >= 5 && willReproduce()) {
+            env.id++;
+            env.blobHash.put(env.id, new Blob(
+                    main,
+                    env,
+                    log,
+                    env.id,
                     (int) (energy - (energy * 0.4)),
                     speed + getSpeedMutation(this),
                     sense + getSenseMutation(this),
                     size + getSizeMutation(),
                     agro + getAgroMutation(),
-                    originalDirProb + getDirProbMutation()));
-            blobBirths++;
-            setReproductionDate(day);
+                    defaultDirProb + getDirProbMutation()));
+            log.blobBirths++;
+            setReproductionDate(log.day);
         }
     }
 
-    public void determinePanicLinearity() {
-        if (!panicmode) originalDirProb = dirProb;
-        if (!panicmode && foodX == null && (day - lastFoodDay) >= 3 && energy <= 35) {
+    private void determinePanicLinearity() {
+        if (!panicmode) defaultDirProb = dirProb;
+        if (!panicmode && foodX == null && (log.day - lastFoodDay) >= 3 && energy <= 35) {
             panicmode = true;
             setDirProb(Math.round(((0.02 * Math.pow((dirProb - 100), 2) + 10) / 100) * dirProb + dirProb));
         } else if (foodX != null) {
             panicmode = false;
-            setDirProb(originalDirProb);
+            setDirProb(defaultDirProb);
         }
     }
 
     public void dailyRoutine() {
-        logRef.get().logBlob(this);
+        log.logBlob(this);
 
         eatBlob();
+
+        if (energy <= 35) {
+            FleeStatus f = determineFleeStatus();
+            if (f.unsafe && !f.noSafeDir) {
+                moveBlob(f.safeDir[rng.nextInt(f.safeDir.length)], speed);
+                senseFood();
+            }
+        }
+
         if (foodX != null || senseFood()) {
             determinePanicLinearity();
             calcDirectionKey();
             decideMovement();
             if (calcDirectionKey() == 0) {
-                if (eatFood()) modEatCount(1);
-                setLastFoodDay(day);
+                eatFood();
+                modEatCount(1);
+                setLastFoodDay(log.day);
                 foodX = null;
                 foodY = null;
             }
@@ -478,6 +606,10 @@ public class Blob extends Animal {
             decideMovement();
         }
 
+        sizeEnergyLoss();
+    }
+
+    private void sizeEnergyLoss() {
         if(size > 33) modEnergy((int) Math.round(-0.03 * size));
         else modEnergy(-1);
     }

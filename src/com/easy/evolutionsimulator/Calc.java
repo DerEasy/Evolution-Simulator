@@ -16,7 +16,7 @@ public class Calc {
     //Defines the accepted direction keys incorporating the exceptions mandated by the exclusion key.
     //Read e.g. exTopLeft as "Except movements to the top left".
     //To control the chances of a specific direction key occurring more often, some keys are duplicates.
-    public static final int[] freeMovement = {0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8};   //exKey: 0
+    public static final int[] freeMovement  = {0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8};  //exKey: 0
     public static final int[] exTopLeft     = {0, 4, 4, 4, 5, 5, 5, 5, 5, 6, 6, 6};                                         //exKey: 1
     public static final int[] exTop         = {0, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8 ,8};                 //exKey: 2
     public static final int[] exTopRight    = {0, 6, 6, 6, 7, 7, 7, 7, 7, 8, 8, 8};                                         //exKey: 3
@@ -25,6 +25,16 @@ public class Calc {
     public static final int[] exBottom      = {0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 8, 8, 8};                 //exKey: 6
     public static final int[] exBottomLeft  = {0, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4};                                         //exKey: 7
     public static final int[] exLeft        = {0, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6};                 //exKey: 8
+
+    //Defines the prohibited direction keys when trying to set the flee mode
+    public static final int[] prTopLeft     = {8, 1, 2};    //prKey: 1
+    public static final int[] prTop         = {1, 2, 3};    //prKey: 2
+    public static final int[] prTopRight    = {2, 3, 4};    //prKey: 3
+    public static final int[] prRight       = {3, 4, 5};    //prKey: 4
+    public static final int[] prBottomRight = {4, 5, 6};    //prKey: 5
+    public static final int[] prBottom      = {5, 6, 7};    //prKey: 6
+    public static final int[] prBottomLeft  = {6, 7, 8};    //prKey: 7
+    public static final int[] prLeft        = {7, 8, 1};    //prKey: 8
 
 
     /**

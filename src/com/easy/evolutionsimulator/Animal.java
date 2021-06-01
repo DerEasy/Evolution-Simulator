@@ -1,9 +1,11 @@
 package com.easy.evolutionsimulator;
 
 import static com.easy.evolutionsimulator.Calc.calcProb;
-import static com.easy.evolutionsimulator.Environment.*;
 
+@SuppressWarnings("unused")
 public abstract class Animal {
+    private final Environment env;
+
     public int speed;
     public int sense;
     public int size;
@@ -18,7 +20,8 @@ public abstract class Animal {
     public int eatCount;
     public int lastFoodDay;
 
-    public Animal() {
+    public Animal(Environment env) {
+        this.env = env;
         age = 0;
     }
 
@@ -68,9 +71,9 @@ public abstract class Animal {
     public void setSense(Integer sense) {
         this.sense = sense;
 
-        boolean dimXGreater = dimX >= dimY;
-        if (dimXGreater && this.sense > (dimX / 2)) this.sense = (dimX / 2);
-        else if (!dimXGreater && this.sense > (dimY / 2)) this.sense = (dimY / 2);
+        boolean dimXGreater = env.dimX >= env.dimY;
+        if (dimXGreater && this.sense > (env.dimX / 2)) this.sense = (env.dimX / 2);
+        else if (!dimXGreater && this.sense > (env.dimY / 2)) this.sense = (env.dimY / 2);
     }
 
     public void setSize(Integer size) {
@@ -82,9 +85,9 @@ public abstract class Animal {
     public void setSpeed(Integer speed) {
         this.speed = speed;
 
-        boolean dimXGreater = dimX >= dimY;
-        if (dimXGreater && this.speed > (dimX / 3)) this.speed = (dimX / 3);
-        else if (!dimXGreater && this.speed > (dimY / 3)) this.speed = (dimY / 3);
+        boolean dimXGreater = env.dimX >= env.dimY;
+        if (dimXGreater && this.speed > (env.dimX / 3)) this.speed = (env.dimX / 3);
+        else if (!dimXGreater && this.speed > (env.dimY / 3)) this.speed = (env.dimY / 3);
     }
 
     public void setReproductionDate(int reproductionDate) {
@@ -132,9 +135,9 @@ public abstract class Animal {
     public void modSense(Integer sense) {
         this.sense += sense;
 
-        boolean dimXGreater = dimX >= dimY;
-        if (dimXGreater && this.sense > (dimX / 2)) this.sense = (dimX / 2);
-        else if (!dimXGreater && this.sense > (dimY / 2)) this.sense = (dimY / 2);
+        boolean dimXGreater = env.dimX >= env.dimY;
+        if (dimXGreater && this.sense > (env.dimX / 2)) this.sense = (env.dimX / 2);
+        else if (!dimXGreater && this.sense > (env.dimY / 2)) this.sense = (env.dimY / 2);
     }
 
     public void modSize(Integer size) {
@@ -146,8 +149,8 @@ public abstract class Animal {
     public void modSpeed(Integer speed) {
         this.speed += speed;
 
-        boolean dimXGreater = dimX >= dimY;
-        if (dimXGreater && this.speed > (dimX / 2)) this.speed = (dimX / 2);
-        else if (!dimXGreater && this.speed > (dimY / 2)) this.speed = (dimY / 2);
+        boolean dimXGreater = env.dimX >= env.dimY;
+        if (dimXGreater && this.speed > (env.dimX / 2)) this.speed = (env.dimX / 2);
+        else if (!dimXGreater && this.speed > (env.dimY / 2)) this.speed = (env.dimY / 2);
     }
 }
