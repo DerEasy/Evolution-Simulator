@@ -42,8 +42,8 @@ public class Main {
 
         if (demomode == 1) {
             initializeEnvironment(8, 8, 0);
-            env.spawnBlobs(6,3,1,30,40, 30,true);
-            startSimulation(0,0,0,0,true,1,7, 15);
+            env.spawnBlobs(6,3,1,30,40, 50,true);
+            startSimulation(0,0,0,0,true,1,10, 15);
 
         } else if (demomode == 2) {
             initializeEnvironment(6, 6, 1);
@@ -117,7 +117,7 @@ public class Main {
         while (log.blobAmount > 0 && log.day <= days && log.foodEaten < foodAmountToEat && timeElapsed <= runTime) {
             //Logging
             finishTime = System.nanoTime();
-            timeElapsed = (double) (finishTime - startTime) / 1000000000;
+            timeElapsed = (double) (finishTime - startTime) / 1_000_000_000;
             log.logEnv();
             if (printEnvEnabled) log.printEnv();
 

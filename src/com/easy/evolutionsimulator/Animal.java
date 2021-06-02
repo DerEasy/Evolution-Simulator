@@ -26,8 +26,10 @@ public abstract class Animal {
     }
 
     public boolean willReproduce() {
-        if (age > 5) return calcProb((int) Math.pow((0.04 * (energy + 20)), 3));
-        else return false;
+        if (age > 5)
+            return calcProb((int) Math.pow((0.04 * (energy + 20)), 3));
+        else
+            return false;
     }
 
     public void setId(Integer id) {
@@ -49,14 +51,20 @@ public abstract class Animal {
 
     public void setDirProb(long dirProb) {
         this.dirProb = (int) dirProb;
-        if (this.dirProb > 100) setDirProb(100);
-        else if (this.dirProb < 0) setDirProb(0);
+
+        if (this.dirProb > 100)
+            setDirProb(100);
+        else if (this.dirProb < 0)
+            setDirProb(0);
     }
 
     public void setAgro(Integer agro) {
         this.agro = agro;
-        if (this.agro > 100) setAgro(100);
-        else if (this.agro < 0) setAgro(0);
+
+        if (this.agro > 100)
+            setAgro(100);
+        else if (this.agro < 0)
+            setAgro(0);
     }
 
     public void setLastFoodDay(int lastFoodDay) {
@@ -64,30 +72,39 @@ public abstract class Animal {
     }
 
     public void setEnergy(Integer energy) {
-        if (energy <= 100) this.energy = energy;
-        else this.energy = 100;
+        if (energy <= 100)
+            this.energy = energy;
+        else
+            this.energy = 100;
     }
 
     public void setSense(Integer sense) {
         this.sense = sense;
 
         boolean dimXGreater = env.dimX >= env.dimY;
-        if (dimXGreater && this.sense > (env.dimX / 2)) this.sense = (env.dimX / 2);
-        else if (!dimXGreater && this.sense > (env.dimY / 2)) this.sense = (env.dimY / 2);
+        if (dimXGreater && this.sense > (env.dimX / 2))
+            this.sense = (env.dimX / 2);
+        else if (!dimXGreater && this.sense > (env.dimY / 2))
+            this.sense = (env.dimY / 2);
     }
 
     public void setSize(Integer size) {
         this.size = size;
-        if (this.size > 100) setSize(100);
-        else if (this.size < 1) setSize(1);
+
+        if (this.size > 100)
+            setSize(100);
+        else if (this.size < 1)
+            setSize(1);
     }
 
     public void setSpeed(Integer speed) {
         this.speed = speed;
 
         boolean dimXGreater = env.dimX >= env.dimY;
-        if (dimXGreater && this.speed > (env.dimX / 3)) this.speed = (env.dimX / 3);
-        else if (!dimXGreater && this.speed > (env.dimY / 3)) this.speed = (env.dimY / 3);
+        if (dimXGreater && this.speed > (env.dimX / 2))
+            this.speed = (env.dimX / 2);
+        else if (!dimXGreater && this.speed > (env.dimY / 2))
+            this.speed = (env.dimY / 2);
     }
 
     public void setReproductionDate(int reproductionDate) {
@@ -113,19 +130,27 @@ public abstract class Animal {
 
     public void modDirProb(Integer dirProb) {
         this.dirProb += dirProb;
-        if (this.dirProb > 100) setDirProb(100);
-        else if (this.dirProb < 0) setDirProb(0);
+
+        if (this.dirProb > 100)
+            setDirProb(100);
+        else if (this.dirProb < 0)
+            setDirProb(0);
     }
 
     public void modAgro(Integer agro) {
         this.agro += agro;
-        if (this.agro > 100) setAgro(100);
-        else if (this.agro < 0) setAgro(0);
+
+        if (this.agro > 100)
+            setAgro(100);
+        else if (this.agro < 0)
+            setAgro(0);
     }
 
     public void modEnergy(Integer energy) {
         this.energy += energy;
-        if (this.energy > 100) setEnergy(100);
+
+        if (this.energy > 100)
+            setEnergy(100);
     }
 
     public void modEatCount(int eatCount) {
@@ -136,21 +161,28 @@ public abstract class Animal {
         this.sense += sense;
 
         boolean dimXGreater = env.dimX >= env.dimY;
-        if (dimXGreater && this.sense > (env.dimX / 2)) this.sense = (env.dimX / 2);
-        else if (!dimXGreater && this.sense > (env.dimY / 2)) this.sense = (env.dimY / 2);
+        if (dimXGreater && this.sense > (env.dimX / 2))
+            this.sense = (env.dimX / 2);
+        else if (!dimXGreater && this.sense > (env.dimY / 2))
+            this.sense = (env.dimY / 2);
     }
 
     public void modSize(Integer size) {
         this.size += size;
-        if (this.size > 100) setSize(100);
-        else if (this.size < 1) setSize(1);
+
+        if (this.size > 100)
+            setSize(100);
+        else if (this.size < 1)
+            setSize(1);
     }
 
     public void modSpeed(Integer speed) {
         this.speed += speed;
 
         boolean dimXGreater = env.dimX >= env.dimY;
-        if (dimXGreater && this.speed > (env.dimX / 2)) this.speed = (env.dimX / 2);
-        else if (!dimXGreater && this.speed > (env.dimY / 2)) this.speed = (env.dimY / 2);
+        if (dimXGreater && this.speed > (env.dimX / 2))
+            this.speed = (env.dimX / 2);
+        else if (!dimXGreater && this.speed > (env.dimY / 2))
+            this.speed = (env.dimY / 2);
     }
 }

@@ -119,8 +119,10 @@ public class Blob extends Animal {
 
     private void directionLogging(int direction) {
         lastDir = direction;
-        if (foodX == null) prefDir = direction;
-        else prefDir = 0;
+        if (foodX == null)
+            prefDir = direction;
+        else
+            prefDir = 0;
     }
 
     /**
@@ -152,8 +154,10 @@ public class Blob extends Animal {
             moveBlob(freeMovement[freeDir], speed);
         }
         else if (exKey == 0 && prefDir > 0) {
-            if (calcProb(dirProb)) moveBlob(prefDir, speed);
-            else moveBlob(freeMovement[freeDir], speed);
+            if (calcProb(dirProb))
+                moveBlob(prefDir, speed);
+            else
+                moveBlob(freeMovement[freeDir], speed);
         }
         else if (exKey > 0 && prefDir == 0) {
             moveBlob(exDir, speed);
@@ -341,18 +345,13 @@ public class Blob extends Animal {
 
     @SuppressWarnings("InnerClassMayBeStatic")
     private class FleeStatus {
-        boolean unsafe, noSafeDir;
-        int[] safeDir;
-        ArrayList<Integer> safeDirList;
+        boolean unsafe, safeDirAvailable;
+        ArrayList<Integer> safeDir;
 
-        FleeStatus(boolean unsafe, boolean noSafeDir) {
+        FleeStatus(ArrayList<Integer> safeDir, boolean unsafe, boolean safeDirAvailable) {
             this.unsafe = unsafe;
-            this.noSafeDir = noSafeDir;
-        }
-
-        public void setSafeArray(int[] safeDir, ArrayList<Integer> safeDirList) {
+            this.safeDirAvailable = safeDirAvailable;
             this.safeDir = safeDir;
-            this.safeDirList = safeDirList;
         }
     }
 
@@ -376,53 +375,12 @@ public class Blob extends Animal {
                     b.sense >= sense &&
                     b.speed >= speed) {
 
-                safeDir = updateSafeDirArray(safeDir, getForeignerDir(b));
+                safeDir = removeUnsafeDir(safeDir, getForeignerDir(b));
+                safeDir = removeExDir(safeDir, getExKey());
             }
         }
 
-        FleeStatus f = new FleeStatus(safeDir.size() < 8, safeDir.size() == 0);
-        if (!f.noSafeDir)
-            f.setSafeArray(safeDir.stream().mapToInt((Integer::valueOf)).toArray(), safeDir);
-
-        return f;
-    }
-
-    private ArrayList<Integer> updateSafeDirArray(ArrayList<Integer> safeDir, int prKey) {
-        switch (prKey) {
-            case 1:
-                for (int i : prTopLeft)
-                    safeDir.remove((Integer) i);
-                break;
-            case 2:
-                for (int i : prTop)
-                    safeDir.remove((Integer) i);
-                break;
-            case 3:
-                for (int i : prTopRight)
-                    safeDir.remove((Integer) i);
-                break;
-            case 4:
-                for (int i : prRight)
-                    safeDir.remove((Integer) i);
-                break;
-            case 5:
-                for (int i : prBottomRight)
-                    safeDir.remove((Integer) i);
-                break;
-            case 6:
-                for (int i : prBottom)
-                    safeDir.remove((Integer) i);
-                break;
-            case 7:
-                for (int i : prBottomLeft)
-                    safeDir.remove((Integer) i);
-                break;
-            case 8:
-                for (int i : prLeft)
-                    safeDir.remove((Integer) i);
-                break;
-        }
-        return safeDir;
+        return new FleeStatus(safeDir, safeDir.size() < 8, safeDir.size() > 0);
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -644,27 +602,16 @@ public class Blob extends Animal {
     }
 
     public void dailyRoutine() {
+        determineDeath();
         log.logBlob(this);
-
         eatBlob();
+        senseFood();
+        if (moveProhibited())
+            return;
+        moveFree();
+    }
 
-        if (energy >= 35) {
-            FleeStatus f = determineFleeStatus();
-            if (f.unsafe && !f.noSafeDir) {
-                int dirKey = calcDirectionKey();
-                if (foodX == null)
-                    senseFood();
-                if (foodX != null && f.safeDirList.contains(dirKey)) {
-                    moveBlob(dirKey, adjustedSpeed);
-                    tryEat();
-                }
-
-                moveBlob(f.safeDir[rng.nextInt(f.safeDir.length)], speed);
-                tryEat();
-                return;
-            }
-        }
-
+    private void moveFree() {
         if (foodX != null || senseFood()) {
             determinePanicLinearity();
             calcDirectionKey();
@@ -674,8 +621,32 @@ public class Blob extends Animal {
             determinePanicLinearity();
             decideMovement();
         }
-
         sizeEnergyLoss();
+    }
+
+    /**
+     * Moves Blob with prohibitions imposed by FleeStatus in mind
+     * @return True if conditions for moving with prohibitions have been met
+     */
+    private boolean moveProhibited() {
+        if (energy >= 35) {
+            FleeStatus f = determineFleeStatus();
+            if (f.unsafe && f.safeDirAvailable) {
+                int dirKey = calcDirectionKey();
+                if (foodX != null && f.safeDir.contains(dirKey)) {
+                    moveBlob(dirKey, adjustedSpeed);
+                    tryEat();
+                    sizeEnergyLoss();
+                    return true;
+                }
+
+                moveBlob(f.safeDir.get(rng.nextInt(f.safeDir.size())), speed);
+                tryEat();
+                sizeEnergyLoss();
+                return true;
+            }
+        }
+        return false;
     }
 
     private void tryEat() {
