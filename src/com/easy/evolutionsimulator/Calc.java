@@ -3,7 +3,7 @@ package com.easy.evolutionsimulator;
 import java.util.Random;
 
 public class Calc {
-    public static Random rng = new Random();
+    public static Random rng = new Random(5);
 
     //Defines the valid mutation shifts
     //To control the chances of a specific mutation occurring more often, some values are duplicates.

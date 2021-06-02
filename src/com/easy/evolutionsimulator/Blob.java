@@ -214,7 +214,7 @@ public class Blob extends Animal {
                 fillIndex++;
                 availableFood[fillIndex] = foodEntity.getValue();
             }
-            if (fillIndex == 9) break;
+            if (fillIndex >= 9) break;
         }
 
         if (fillIndex > 0) {
@@ -343,14 +343,16 @@ public class Blob extends Animal {
     private class FleeStatus {
         boolean unsafe, noSafeDir;
         int[] safeDir;
+        ArrayList<Integer> safeDirList;
 
         FleeStatus(boolean unsafe, boolean noSafeDir) {
             this.unsafe = unsafe;
             this.noSafeDir = noSafeDir;
         }
 
-        public void setSafeArray(int[] safeDir) {
+        public void setSafeArray(int[] safeDir, ArrayList<Integer> safeDirList) {
             this.safeDir = safeDir;
+            this.safeDirList = safeDirList;
         }
     }
 
@@ -380,7 +382,7 @@ public class Blob extends Animal {
 
         FleeStatus f = new FleeStatus(safeDir.size() < 8, safeDir.size() == 0);
         if (!f.noSafeDir)
-            f.setSafeArray(safeDir.stream().mapToInt((Integer::valueOf)).toArray());
+            f.setSafeArray(safeDir.stream().mapToInt((Integer::valueOf)).toArray(), safeDir);
 
         return f;
     }
@@ -646,11 +648,20 @@ public class Blob extends Animal {
 
         eatBlob();
 
-        if (energy <= 35) {
+        if (energy >= 35) {
             FleeStatus f = determineFleeStatus();
             if (f.unsafe && !f.noSafeDir) {
+                int dirKey = calcDirectionKey();
+                if (foodX == null)
+                    senseFood();
+                if (foodX != null && f.safeDirList.contains(dirKey)) {
+                    moveBlob(dirKey, adjustedSpeed);
+                    tryEat();
+                }
+
                 moveBlob(f.safeDir[rng.nextInt(f.safeDir.length)], speed);
-                senseFood();
+                tryEat();
+                return;
             }
         }
 
@@ -658,19 +669,23 @@ public class Blob extends Animal {
             determinePanicLinearity();
             calcDirectionKey();
             decideMovement();
-            if (calcDirectionKey() == 0) {
-                eatFood();
-                modEatCount(1);
-                setLastFoodDay(log.day);
-                foodX = null;
-                foodY = null;
-            }
+            tryEat();
         } else {
             determinePanicLinearity();
             decideMovement();
         }
 
         sizeEnergyLoss();
+    }
+
+    private void tryEat() {
+        if (calcDirectionKey() == 0) {
+            eatFood();
+            modEatCount(1);
+            setLastFoodDay(log.day);
+            foodX = null;
+            foodY = null;
+        }
     }
 
     private void sizeEnergyLoss() {
